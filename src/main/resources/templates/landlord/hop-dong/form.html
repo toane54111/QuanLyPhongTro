@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Lập hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Lập hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-plus me-2"></i>Lập hợp đồng thuê phòng</h2>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/landlord/hop-dong/create}" method="post" th:object="${hopDong}">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Phòng trọ <span class="text-danger">*</span></label>
+                            <select name="phongId" class="form-select" required>
+                                <option value="">-- Chọn phòng --</option>
+                                <option th:each="phong : ${danhSachPhongTrong}"
+                                        th:value="${phong.phongTroId}"
+                                        th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu + ' (Giá: ' + #numbers.formatDecimal(phong.giaThue, 0, 'COMMA', 0, 'POINT') + ' VND)'}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Khách thuê <span class="text-danger">*</span></label>
+                            <select name="khachThueId" class="form-select" required>
+                                <option value="">-- Chọn khách thuê --</option>
+                                <option th:each="kt : ${danhSachKhachThue}"
+                                        th:value="${kt.nguoiDungId}"
+                                        th:text="${kt.hoTen + ' - ' + kt.email}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" th:field="*{ngayBatDau}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" th:field="*{ngayKetThuc}" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Giá thuê (VND) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{giaThue}" required min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tiền cọc (VND) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{tienCoc}" required min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" th:field="*{ghiChu}" rows="3"></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Khi lập hợp đồng, phòng sẽ tự động chuyển sang trạng thái 'Đã thuê'.
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Lập hợp đồng
+                        </button>
+                        <a th:href="@{/landlord/hop-dong}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

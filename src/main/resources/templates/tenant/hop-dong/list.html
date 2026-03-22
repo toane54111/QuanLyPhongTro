@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Hợp đồng của tôi</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Hợp đồng của tôi', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>Hợp đồng của tôi</h2>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!hopDongs.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Giá thuê</th>
+                            <th>Tiền cọc</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd, iter : ${hopDongs}">
+                            <td th:text="${iter.count}"></td>
+                            <td>
+                                <span th:text="${hd.phongTro.soPhong}"></span>
+                                <span class="text-muted"> - </span>
+                                <span th:text="${hd.phongTro.khuTro.tenKhu}"></span>
+                            </td>
+                            <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
+                                <span th:if="${hd.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
+                                <span th:if="${hd.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/tenant/hop-dong/detail/{id}(id=${hd.hopDongId})}"
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${hopDongs.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Bạn chưa có hợp đồng nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

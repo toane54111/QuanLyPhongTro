@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Sự cố</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Sự cố', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Quản lý Sự cố</h2>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachSuCo.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Khách thuê</th>
+                            <th>Loại sự cố</th>
+                            <th>Mức độ ưu tiên</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sc, iter : ${danhSachSuCo}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${sc.phongTro.soPhong}"></td>
+                            <td th:text="${sc.khachThue.hoTen}"></td>
+                            <td th:text="${sc.loaiSuCo}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${sc.mucDoUuTien.name() == 'THAP' ? 'bg-success' :
+                                          (sc.mucDoUuTien.name() == 'TRUNG_BINH' ? 'bg-warning' : 'bg-danger')}"
+                                      th:text="${sc.mucDoUuTien.name() == 'THAP' ? 'Thấp' :
+                                          (sc.mucDoUuTien.name() == 'TRUNG_BINH' ? 'Trung bình' : 'Cao')}">
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${sc.trangThai.name() == 'MOI' ? 'bg-primary' :
+                                          (sc.trangThai.name() == 'DA_TIEP_NHAN' ? 'bg-info' :
+                                          (sc.trangThai.name() == 'DANG_SUA' ? 'bg-warning' : 'bg-success'))}"
+                                      th:text="${sc.trangThai.name() == 'MOI' ? 'Mới' :
+                                          (sc.trangThai.name() == 'DA_TIEP_NHAN' ? 'Đã tiếp nhận' :
+                                          (sc.trangThai.name() == 'DANG_SUA' ? 'Đang sửa' : 'Đã xong'))}">
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(sc.ngayTao, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <a th:href="@{/landlord/su-co/detail/{id}(id=${sc.ticketId})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachSuCo.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có sự cố nào được báo cáo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

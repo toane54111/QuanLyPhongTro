@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Ghi chỉ số Điện/Nước</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Ghi chỉ số Điện/Nước', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-lightning me-2"></i>
+                <span th:if="${isEdit}">Sửa chỉ số Điện/Nước</span>
+                <span th:unless="${isEdit}">Ghi chỉ số Điện/Nước</span>
+            </h2>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="${isEdit ? '/landlord/chi-so/edit/' + chiSoDienNuoc.chiSoId : '/landlord/chi-so/create'}"
+                      method="post" th:object="${chiSoDienNuoc}">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Phòng trọ <span class="text-danger">*</span></label>
+                            <select name="phongId" class="form-select" required>
+                                <option value="">-- Chọn phòng --</option>
+                                <option th:each="phong : ${danhSachPhongTro}"
+                                        th:value="${phong.phongTroId}"
+                                        th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu}"
+                                        th:selected="${chiSoDienNuoc.phongTro != null && chiSoDienNuoc.phongTro.phongTroId == phong.phongTroId}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kỳ ghi <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" th:field="*{kyGhi}"
+                                   placeholder="YYYY-MM" required>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3"><i class="bi bi-lightning-charge me-1"></i>Chỉ số Điện</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Điện cũ (kWh) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{dienCu}" required min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Điện mới (kWh) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{dienMoi}" required min="0">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3"><i class="bi bi-droplet me-1"></i>Chỉ số Nước</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nước cũ (m<sup>3</sup>) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{nuocCu}" required min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nước mới (m<sup>3</sup>) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" th:field="*{nuocMoi}" required min="0">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày ghi</label>
+                            <input type="date" class="form-control" th:field="*{ngayGhi}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            <span th:if="${isEdit}">Cập nhật</span>
+                            <span th:unless="${isEdit}">Lưu chỉ số</span>
+                        </button>
+                        <a th:href="@{/landlord/chi-so}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

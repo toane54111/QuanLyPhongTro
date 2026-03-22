@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Dashboard', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <div class="page-header">
+            <h2><i class="bi bi-speedometer2 me-2"></i>Xin chào, <span th:text="${nguoiDung.hoTen}">Khách thuê</span>!</h2>
+            <p class="text-muted mb-0">Trang tổng quan cá nhân</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${soHopDong}">0</div>
+                            <div class="stat-label">Hợp đồng hiệu lực</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${hoaDonChuaTT}">0</div>
+                            <div class="stat-label">Hóa đơn chưa thanh toán</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                            <i class="bi bi-wrench"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${suCoDaGui}">0</div>
+                            <div class="stat-label">Sự cố đã báo cáo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hợp đồng hiện tại -->
+        <div class="table-container mb-4" th:if="${!hopDongHieuLuc.isEmpty()}">
+            <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-text me-2"></i>Hợp đồng hiện tại</h5>
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Phòng</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày kết thúc</th>
+                        <th>Giá thuê</th>
+                        <th>Tiền cọc</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="hd : ${hopDongHieuLuc}">
+                        <td th:text="${hd.phongTro.soPhong}">P101</td>
+                        <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</td>
+                        <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}">01/06/2026</td>
+                        <td th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' đ'">3,000,000 đ</td>
+                        <td th:text="${#numbers.formatDecimal(hd.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' đ'">3,000,000 đ</td>
+                        <td><span class="badge badge-dang-hieu-luc">Đang hiệu lực</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-info" th:if="${hopDongHieuLuc.isEmpty()}">
+            <i class="bi bi-info-circle me-1"></i> Bạn chưa có hợp đồng thuê phòng nào.
+        </div>
+
+        <!-- Thao tác nhanh -->
+        <div class="card stat-card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-lightning me-2"></i>Thao tác nhanh</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/tenant/hoa-don}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-receipt me-1"></i>Xem hóa đơn
+                    </a>
+                    <a th:href="@{/tenant/su-co/bao-cao}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-wrench me-1"></i>Báo cáo sự cố
+                    </a>
+                    <a th:href="@{/tenant/tai-khoan}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-person-gear me-1"></i>Cập nhật tài khoản
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

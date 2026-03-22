@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Khách thuê</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Khách thuê', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-people me-2"></i>Quản lý Khách thuê</h2>
+            <a th:href="@{/landlord/khach-thue/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Thêm khách thuê
+            </a>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachKhachThue.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>SĐT</th>
+                            <th>CCCD</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="kt, iter : ${danhSachKhachThue}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${kt.hoTen}"></td>
+                            <td th:text="${kt.email}"></td>
+                            <td th:text="${kt.sdt}"></td>
+                            <td th:text="${kt.cccd}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${kt.trangThai.name() == 'HOAT_DONG' ? 'bg-success' : 'bg-danger'}"
+                                      th:text="${kt.trangThai.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}">
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(kt.ngayTao, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <a th:href="@{/landlord/khach-thue/edit/{id}(id=${kt.userId})}"
+                                   class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-pencil-square"></i> Sửa
+                                </a>
+                                <form th:action="@{/landlord/khach-thue/toggle-status/{id}(id=${kt.userId})}"
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm"
+                                            th:classappend="${kt.trangThai.name() == 'HOAT_DONG' ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                            th:text="${kt.trangThai.name() == 'HOAT_DONG' ? 'Khóa' : 'Mở khóa'}">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachKhachThue.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có khách thuê nào. Hãy thêm khách thuê mới!</p>
+                        <a th:href="@{/landlord/khach-thue/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm khách thuê
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

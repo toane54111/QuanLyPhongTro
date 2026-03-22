@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Phòng trọ</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title=${isEdit ? 'Sửa phòng trọ' : 'Thêm phòng trọ'}, content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-door-open me-2"></i>
+                <span th:if="${isEdit}">Sửa phòng trọ</span>
+                <span th:unless="${isEdit}">Thêm phòng trọ</span>
+            </h2>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="${isEdit ? '/landlord/phong-tro/edit/' + phongTro.phongId : '/landlord/phong-tro/create'}"
+                      method="post" th:object="${phongTro}">
+
+                    <div class="mb-3">
+                        <label for="khuTroId" class="form-label">Khu trọ <span class="text-danger">*</span></label>
+                        <select name="khuTroId" id="khuTroId" class="form-select" required>
+                            <option value="">-- Chọn khu trọ --</option>
+                            <option th:each="khu : ${danhSachKhuTro}"
+                                    th:value="${khu.khuTroId}"
+                                    th:text="${khu.tenKhu}"
+                                    th:selected="${phongTro.khuTro != null && phongTro.khuTro.khuTroId == khu.khuTroId}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="soPhong" class="form-label">Số phòng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="soPhong" th:field="*{soPhong}"
+                               placeholder="Nhập số phòng" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tang" class="form-label">Tầng</label>
+                            <input type="number" class="form-control" id="tang" th:field="*{tang}"
+                                   placeholder="Nhập tầng" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dienTich" class="form-label">Diện tích (m²)</label>
+                            <input type="number" class="form-control" id="dienTich" th:field="*{dienTich}"
+                                   placeholder="Nhập diện tích" step="0.1" min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="giaThue" class="form-label">Giá thuê (VND) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="giaThue" th:field="*{giaThue}"
+                               placeholder="Nhập giá thuê" min="0" required>
+                    </div>
+
+                    <div class="mb-3" th:if="${isEdit}">
+                        <label for="trangThai" class="form-label">Trạng thái</label>
+                        <select class="form-select" id="trangThai" th:field="*{trangThai}">
+                            <option th:each="tt : ${trangThaiPhongs}"
+                                    th:value="${tt}"
+                                    th:text="${tt.name() == 'TRONG' ? 'Trống' : (tt.name() == 'DA_THUE' ? 'Đã thuê' : 'Bảo trì')}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="moTa" class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="moTa" th:field="*{moTa}" rows="3"
+                                  placeholder="Nhập mô tả (tùy chọn)"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            <span th:if="${isEdit}">Cập nhật</span>
+                            <span th:unless="${isEdit}">Thêm mới</span>
+                        </button>
+                        <a th:href="@{/landlord/phong-tro}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

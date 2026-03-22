@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-file-earmark-text me-2"></i>Chi tiết Hợp đồng
+                <span class="text-primary" th:text="'#' + ${hopDong.hopDongId}"></span>
+            </h2>
+        </div>
+
+        <!-- Contract Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hợp đồng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th class="text-muted" style="width: 40%;">Phòng:</th>
+                                <td th:text="${hopDong.phongTro.soPhong}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Khu trọ:</th>
+                                <td th:text="${hopDong.phongTro.khuTro.tenKhu}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Khách thuê:</th>
+                                <td th:text="${hopDong.khachThue.hoTen}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Email:</th>
+                                <td th:text="${hopDong.khachThue.email}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Số điện thoại:</th>
+                                <td th:text="${hopDong.khachThue.sdt}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th class="text-muted" style="width: 40%;">Ngày bắt đầu:</th>
+                                <td th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Ngày kết thúc:</th>
+                                <td th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Giá thuê:</th>
+                                <td th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Tiền cọc:</th>
+                                <td th:text="${#numbers.formatDecimal(hopDong.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Trạng thái:</th>
+                                <td>
+                                    <span th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
+                                    <span th:if="${hopDong.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
+                                    <span th:if="${hopDong.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row" th:if="${hopDong.ghiChu != null && !hopDong.ghiChu.isEmpty()}">
+                    <div class="col-12">
+                        <hr>
+                        <h6 class="text-muted">Ghi chú:</h6>
+                        <p th:text="${hopDong.ghiChu}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2">
+            <a th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC' || hopDong.trangThai.name() == 'SAP_HET_HAN'}"
+               th:href="@{/landlord/hop-dong/extend/{id}(id=${hopDong.hopDongId})}"
+               class="btn btn-success">
+                <i class="bi bi-calendar-plus me-1"></i>Gia hạn
+            </a>
+            <form th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC' || hopDong.trangThai.name() == 'SAP_HET_HAN'}"
+                  th:action="@{/landlord/hop-dong/terminate/{id}(id=${hopDong.hopDongId})}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn chấm dứt hợp đồng này?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle me-1"></i>Chấm dứt
+                </button>
+            </form>
+            <a th:href="@{/landlord/hop-dong}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </a>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

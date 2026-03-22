@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Hóa đơn</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Hóa đơn', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-receipt me-2"></i>Chi tiết Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
+        </div>
+
+        <!-- Invoice Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hóa đơn</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Phòng:</strong>
+                        <span th:text="${hoaDon.hopDong.phongTro.soPhong}"></span>
+                        <span class="text-muted"> - </span>
+                        <span th:text="${hoaDon.hopDong.phongTro.khuTro.tenKhu}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Kỳ thanh toán:</strong>
+                        <span th:text="${hoaDon.kyThanhToan}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Hạn thanh toán:</strong>
+                        <span th:text="${#temporals.format(hoaDon.hanThanhToan, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Trạng thái:</strong>
+                        <span th:if="${hoaDon.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa thanh toán</span>
+                        <span th:if="${hoaDon.trangThai.name() == 'DA_THANH_TOAN'}" class="badge bg-success">Đã thanh toán</span>
+                        <span th:if="${hoaDon.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">Thanh toán một phần</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Breakdown Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Chi tiết chi phí</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                    <tr>
+                        <td>Tiền phòng</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr>
+                        <td>Tiền điện</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr>
+                        <td>Tiền nước</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr>
+                        <td>Phí dịch vụ</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.phiDichVu, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr class="table-dark">
+                        <td class="fw-bold">Tổng tiền</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr>
+                        <td>Đã thanh toán</td>
+                        <td class="text-end text-success" th:text="${#numbers.formatDecimal(hoaDon.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">Còn nợ</td>
+                        <td class="text-end fw-bold text-danger" th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payment Form (only if conNo > 0) -->
+        <div class="card mb-4" th:if="${hoaDon.conNo > 0}">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Thanh toán</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/tenant/hoa-don/thanh-toan/{id}(id=${hoaDon.hoaDonId})}" method="post">
+                    <div class="mb-3">
+                        <label for="phuongThuc" class="form-label">Phương thức thanh toán</label>
+                        <select class="form-select" id="phuongThuc" name="phuongThuc" required>
+                            <option value="TIEN_MAT">Tiền mặt</option>
+                            <option value="CHUYEN_KHOAN">Chuyển khoản</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Thanh toán sẽ ghi nhận toàn bộ số tiền còn nợ:
+                        <strong th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></strong>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Thanh toán
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <a th:href="@{/tenant/hoa-don}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
+        </a>
+
+    </div>
+</div>
+</body>
+</html>

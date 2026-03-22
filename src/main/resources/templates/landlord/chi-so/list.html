@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Chỉ số Điện/Nước</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Chỉ số Điện/Nước', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-lightning me-2"></i>Quản lý Chỉ số Điện/Nước</h2>
+            <a th:href="@{/landlord/chi-so/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Ghi chỉ số
+            </a>
+        </div>
+
+        <!-- Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/landlord/chi-so}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Kỳ ghi</label>
+                        <input type="text" name="kyGhi" class="form-control" placeholder="YYYY-MM"
+                               th:value="${selectedKyGhi}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel me-1"></i>Lọc
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachChiSo.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Kỳ ghi</th>
+                            <th>Điện cũ</th>
+                            <th>Điện mới</th>
+                            <th>Tiêu thụ (Điện)</th>
+                            <th>Nước cũ</th>
+                            <th>Nước mới</th>
+                            <th>Tiêu thụ (Nước)</th>
+                            <th>Ngày ghi</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cs, iter : ${danhSachChiSo}">
+                            <td th:text="${iter.count}"></td>
+                            <td>
+                                <span th:text="${cs.phongTro.soPhong}"></span>
+                                <span class="text-muted"> - </span>
+                                <span th:text="${cs.phongTro.khuTro.tenKhu}"></span>
+                            </td>
+                            <td th:text="${cs.kyGhi}"></td>
+                            <td th:text="${cs.dienCu}"></td>
+                            <td th:text="${cs.dienMoi}"></td>
+                            <td>
+                                <span class="badge bg-warning text-dark" th:text="${cs.dienTieuThu}"></span>
+                            </td>
+                            <td th:text="${cs.nuocCu}"></td>
+                            <td th:text="${cs.nuocMoi}"></td>
+                            <td>
+                                <span class="badge bg-info text-dark" th:text="${cs.nuocTieuThu}"></span>
+                            </td>
+                            <td th:text="${#temporals.format(cs.ngayGhi, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <a th:href="@{/landlord/chi-so/edit/{id}(id=${cs.chiSoId})}"
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil-square"></i> Sửa
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachChiSo.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-lightning text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có chỉ số nào. Hãy ghi chỉ số mới!</p>
+                        <a th:href="@{/landlord/chi-so/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Ghi chỉ số
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Yêu cầu gia hạn hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Yêu cầu gia hạn hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h2><i class="bi bi-calendar-plus me-2"></i>Yêu cầu gia hạn hợp đồng</h2>
+        </div>
+
+        <!-- Current Contract Info -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hợp đồng hiện tại</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Phòng:</strong>
+                        <span th:text="${hopDong.phongTro.soPhong}"></span>
+                        <span class="text-muted"> - </span>
+                        <span th:text="${hopDong.phongTro.khuTro.tenKhu}"></span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Ngày kết thúc hiện tại:</strong>
+                        <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Thông tin gia hạn</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/tenant/hop-dong/yeu-cau-gia-han/{id}(id=${hopDong.hopDongId})}" method="post">
+                    <div class="mb-3">
+                        <label for="thoiGianGiaHan" class="form-label">Số tháng muốn gia hạn <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="thoiGianGiaHan" name="thoiGianGiaHan"
+                               min="1" max="24" required placeholder="Nhập số tháng (1-24)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ghiChu" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="ghiChu" name="ghiChu" rows="3"
+                                  placeholder="Nhập ghi chú (nếu có)"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Gửi yêu cầu
+                        </button>
+                        <a th:href="@{/tenant/hop-dong/detail/{id}(id=${hopDong.hopDongId})}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

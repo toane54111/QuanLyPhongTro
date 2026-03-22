@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>Quản lý Hợp đồng</h2>
+            <a th:href="@{/landlord/hop-dong/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Lập hợp đồng
+            </a>
+        </div>
+
+        <!-- Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/landlord/hop-dong}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="trangThai" class="form-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="tt : ${trangThaiHopDongs}"
+                                    th:value="${tt}"
+                                    th:text="${tt.name() == 'DANG_HIEU_LUC' ? 'Đang hiệu lực' : (tt.name() == 'SAP_HET_HAN' ? 'Sắp hết hạn' : 'Đã chấm dứt')}"
+                                    th:selected="${tt == selectedTrangThai}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel me-1"></i>Lọc
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachHopDong.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Khách thuê</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Giá thuê</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd, iter : ${danhSachHopDong}">
+                            <td th:text="${iter.count}"></td>
+                            <td>
+                                <span th:text="${hd.phongTro.soPhong}"></span>
+                                <span class="text-muted"> - </span>
+                                <span th:text="${hd.phongTro.khuTro.tenKhu}"></span>
+                            </td>
+                            <td th:text="${hd.khachThue.hoTen}"></td>
+                            <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
+                                <span th:if="${hd.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
+                                <span th:if="${hd.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/landlord/hop-dong/detail/{id}(id=${hd.hopDongId})}"
+                                   class="btn btn-sm btn-outline-info me-1">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                                <a th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC' || hd.trangThai.name() == 'SAP_HET_HAN'}"
+                                   th:href="@{/landlord/hop-dong/extend/{id}(id=${hd.hopDongId})}"
+                                   class="btn btn-sm btn-outline-success me-1">
+                                    <i class="bi bi-calendar-plus"></i> Gia hạn
+                                </a>
+                                <form th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC' || hd.trangThai.name() == 'SAP_HET_HAN'}"
+                                      th:action="@{/landlord/hop-dong/terminate/{id}(id=${hd.hopDongId})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn chấm dứt hợp đồng này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle"></i> Chấm dứt
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachHopDong.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có hợp đồng nào. Hãy lập hợp đồng mới!</p>
+                        <a th:href="@{/landlord/hop-dong/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Lập hợp đồng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

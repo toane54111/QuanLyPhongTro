@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Tài khoản</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Tài khoản', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h2><i class="bi bi-person-gear me-2"></i>Quản lý Tài khoản</h2>
+        </div>
+
+        <!-- Card 1: Thông tin cá nhân -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Thông tin cá nhân</h5>
+            </div>
+            <div class="card-body">
+                <!-- Readonly Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="text" class="form-control" th:value="${nguoiDung.email}" readonly disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">CCCD</label>
+                        <input type="text" class="form-control" th:value="${nguoiDung.cccd}" readonly disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Vai trò</label>
+                        <input type="text" class="form-control" readonly disabled
+                               th:value="${nguoiDung.vaiTro.name() == 'CHU_TRO' ? 'Chủ trọ' : 'Khách thuê'}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Ngày tạo</label>
+                        <input type="text" class="form-control" readonly disabled
+                               th:value="${#temporals.format(nguoiDung.ngayTao, 'dd/MM/yyyy')}">
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Editable Form -->
+                <form th:action="${nguoiDung.vaiTro.name() == 'CHU_TRO'} ? @{/landlord/tai-khoan/update} : @{/tenant/tai-khoan/update}" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="hoTen" class="form-label fw-bold">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="hoTen" name="hoTen"
+                                   th:value="${nguoiDung.hoTen}" required placeholder="Nhập họ tên">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="sdt" class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="sdt" name="sdt"
+                                   th:value="${nguoiDung.sdt}" required placeholder="Nhập số điện thoại">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Cập nhật
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card 2: Đổi mật khẩu -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="${nguoiDung.vaiTro.name() == 'CHU_TRO'} ? @{/landlord/tai-khoan/change-password} : @{/tenant/tai-khoan/change-password}" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="oldPassword" class="form-label fw-bold">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="oldPassword" name="oldPassword"
+                                   required placeholder="Nhập mật khẩu hiện tại">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="newPassword" class="form-label fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="newPassword" name="newPassword"
+                                   required placeholder="Nhập mật khẩu mới">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirmPassword" class="form-label fw-bold">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                                   required placeholder="Nhập lại mật khẩu mới">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-key me-1"></i>Đổi mật khẩu
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

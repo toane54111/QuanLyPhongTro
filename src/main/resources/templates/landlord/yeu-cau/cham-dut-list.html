@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Yêu cầu Chấm dứt hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Yêu cầu Chấm dứt hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-x me-2"></i>Yêu cầu Chấm dứt hợp đồng</h2>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachYeuCau.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Khách thuê</th>
+                            <th>Phòng</th>
+                            <th>Ngày dự kiến trả</th>
+                            <th>Lý do</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="yc, iter : ${danhSachYeuCau}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${yc.khachThue.hoTen}"></td>
+                            <td th:text="${yc.hopDong.phongTro.soPhong}"></td>
+                            <td th:text="${#temporals.format(yc.ngayDuKienTra, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${yc.lyDo}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${yc.trangThai.name() == 'CHO_PHE_DUYET' ? 'bg-warning' :
+                                          (yc.trangThai.name() == 'DA_PHE_DUYET' ? 'bg-success' : 'bg-danger')}"
+                                      th:text="${yc.trangThai.name() == 'CHO_PHE_DUYET' ? 'Chờ duyệt' :
+                                          (yc.trangThai.name() == 'DA_PHE_DUYET' ? 'Đã duyệt' : 'Từ chối')}">
+                                </span>
+                                <small th:if="${yc.trangThai.name() == 'DA_TU_CHOI' && yc.lyDoTuChoi != null}"
+                                       class="d-block text-muted mt-1" th:text="'Lý do: ' + ${yc.lyDoTuChoi}"></small>
+                            </td>
+                            <td th:text="${#temporals.format(yc.ngayTao, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <div th:if="${yc.trangThai.name() == 'CHO_PHE_DUYET'}" class="d-flex gap-1">
+                                    <!-- Duyệt -->
+                                    <form th:action="@{/landlord/yeu-cau-cham-dut/approve/{id}(id=${yc.yeuCauId})}" method="post">
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Bạn có chắc chắn muốn duyệt yêu cầu này?');">
+                                            <i class="bi bi-check-lg"></i> Duyệt
+                                        </button>
+                                    </form>
+                                    <!-- Từ chối -->
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            th:data-bs-target="'#rejectModal' + ${yc.yeuCauId}">
+                                        <i class="bi bi-x-lg"></i> Từ chối
+                                    </button>
+                                </div>
+                                <span th:if="${yc.trangThai.name() != 'CHO_PHE_DUYET'}" class="text-muted">--</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachYeuCau.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có yêu cầu chấm dứt hợp đồng nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reject Modals -->
+        <div th:each="yc : ${danhSachYeuCau}" th:if="${yc.trangThai.name() == 'CHO_PHE_DUYET'}">
+            <div class="modal fade" th:id="'rejectModal' + ${yc.yeuCauId}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form th:action="@{/landlord/yeu-cau-cham-dut/reject/{id}(id=${yc.yeuCauId})}" method="post">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Từ chối yêu cầu chấm dứt</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bạn đang từ chối yêu cầu chấm dứt hợp đồng của <strong th:text="${yc.khachThue.hoTen}"></strong>
+                                    - Phòng <strong th:text="${yc.hopDong.phongTro.soPhong}"></strong>.</p>
+                                <div class="mb-3">
+                                    <label class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" name="lyDoTuChoi" rows="3"
+                                              placeholder="Nhập lý do từ chối..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Xác nhận từ chối
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

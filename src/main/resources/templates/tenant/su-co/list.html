@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Sự cố đã báo cáo</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Sự cố đã báo cáo', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-wrench me-2"></i>Sự cố đã báo cáo</h2>
+            <a th:href="@{/tenant/su-co/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Báo cáo sự cố mới
+            </a>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!suCos.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Loại sự cố</th>
+                            <th>Mô tả</th>
+                            <th>Mức độ</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sc, iter : ${suCos}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${sc.phongTro.soPhong}"></td>
+                            <td th:text="${sc.loaiSuCo}"></td>
+                            <td>
+                                <span th:text="${#strings.abbreviate(sc.moTa, 50)}"></span>
+                            </td>
+                            <td>
+                                <span th:if="${sc.mucDoUuTien.name() == 'THAP'}" class="badge bg-success">Thấp</span>
+                                <span th:if="${sc.mucDoUuTien.name() == 'TRUNG_BINH'}" class="badge bg-warning text-dark">Trung bình</span>
+                                <span th:if="${sc.mucDoUuTien.name() == 'CAO'}" class="badge bg-danger">Cao</span>
+                            </td>
+                            <td>
+                                <span th:if="${sc.trangThai.name() == 'MOI'}" class="badge bg-primary">Mới</span>
+                                <span th:if="${sc.trangThai.name() == 'DA_TIEP_NHAN'}" class="badge bg-info text-dark">Đã tiếp nhận</span>
+                                <span th:if="${sc.trangThai.name() == 'DANG_SUA'}" class="badge bg-warning text-dark">Đang sửa</span>
+                                <span th:if="${sc.trangThai.name() == 'DA_XONG'}" class="badge bg-success">Đã xong</span>
+                            </td>
+                            <td th:text="${#temporals.format(sc.ngayTao, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <a th:href="@{/tenant/su-co/detail/{id}(id=${sc.ticketId})}"
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${suCos.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-wrench text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Bạn chưa báo cáo sự cố nào.</p>
+                        <a th:href="@{/tenant/su-co/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Báo cáo sự cố mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

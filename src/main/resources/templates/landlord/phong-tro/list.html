@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Phòng trọ</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Phòng trọ', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-door-open me-2"></i>Quản lý Phòng trọ</h2>
+            <a th:href="@{/landlord/phong-tro/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Thêm phòng
+            </a>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/landlord/phong-tro}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="khuTroId" class="form-label">Khu trọ</label>
+                        <select name="khuTroId" id="khuTroId" class="form-select">
+                            <option value="">-- Tất cả khu trọ --</option>
+                            <option th:each="khu : ${danhSachKhuTro}"
+                                    th:value="${khu.khuTroId}"
+                                    th:text="${khu.tenKhu}"
+                                    th:selected="${selectedKhuTroId != null && selectedKhuTroId == khu.khuTroId}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="trangThai" class="form-label">Trạng thái</label>
+                        <select name="trangThai" id="trangThai" class="form-select">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option th:each="tt : ${trangThaiPhongs}"
+                                    th:value="${tt}"
+                                    th:text="${tt.name() == 'TRONG' ? 'Trống' : (tt.name() == 'DA_THUE' ? 'Đã thuê' : 'Bảo trì')}"
+                                    th:selected="${selectedTrangThai != null && selectedTrangThai.name() == tt.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel me-1"></i>Lọc
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachPhongTro.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Khu trọ</th>
+                            <th>Số phòng</th>
+                            <th>Tầng</th>
+                            <th>Diện tích (m²)</th>
+                            <th>Giá thuê (VND)</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="phong, iter : ${danhSachPhongTro}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${phong.khuTro.tenKhu}"></td>
+                            <td th:text="${phong.soPhong}"></td>
+                            <td th:text="${phong.tang}"></td>
+                            <td th:text="${phong.dienTich}"></td>
+                            <td th:text="${#numbers.formatDecimal(phong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${phong.trangThai.name() == 'TRONG' ? 'bg-success' : (phong.trangThai.name() == 'DA_THUE' ? 'bg-danger' : 'bg-warning')}"
+                                      th:text="${phong.trangThai.name() == 'TRONG' ? 'Trống' : (phong.trangThai.name() == 'DA_THUE' ? 'Đã thuê' : 'Bảo trì')}">
+                                </span>
+                            </td>
+                            <td>
+                                <a th:href="@{/landlord/phong-tro/edit/{id}(id=${phong.phongId})}"
+                                   class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-pencil-square"></i> Sửa
+                                </a>
+                                <form th:action="@{/landlord/phong-tro/delete/{id}(id=${phong.phongId})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachPhongTro.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-door-open text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có phòng trọ nào. Hãy thêm phòng mới!</p>
+                        <a th:href="@{/landlord/phong-tro/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm phòng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

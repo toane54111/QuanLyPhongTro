@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Báo cáo sự cố</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Báo cáo sự cố', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Báo cáo sự cố</h2>
+        </div>
+
+        <!-- Room Info -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-door-open me-2"></i>Thông tin phòng</h5>
+            </div>
+            <div class="card-body">
+                <strong>Phòng:</strong>
+                <span th:text="${hopDong.phongTro.soPhong}"></span>
+                <span class="text-muted"> - </span>
+                <span th:text="${hopDong.phongTro.khuTro.tenKhu}"></span>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Thông tin sự cố</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/tenant/su-co/create}" method="post">
+                    <div class="mb-3">
+                        <label for="loaiSuCo" class="form-label">Loại sự cố <span class="text-danger">*</span></label>
+                        <select class="form-select" id="loaiSuCo" name="loaiSuCo" required>
+                            <option value="">-- Chọn loại sự cố --</option>
+                            <option value="Điện">Điện</option>
+                            <option value="Nước">Nước</option>
+                            <option value="Cửa/Khóa">Cửa/Khóa</option>
+                            <option value="Mái/Trần">Mái/Trần</option>
+                            <option value="Tường/Sàn">Tường/Sàn</option>
+                            <option value="Thiết bị">Thiết bị</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="moTa" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="moTa" name="moTa" rows="4" required
+                                  placeholder="Mô tả chi tiết sự cố bạn gặp phải"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mucDoUuTien" class="form-label">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                        <select class="form-select" id="mucDoUuTien" name="mucDoUuTien" required>
+                            <option value="">-- Chọn mức độ --</option>
+                            <option th:each="md : ${mucDoUuTiens}" th:value="${md.name()}"
+                                    th:text="${md.name() == 'THAP' ? 'Thấp' : (md.name() == 'TRUNG_BINH' ? 'Trung bình' : 'Cao')}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hinhAnh" class="form-label">Link hình ảnh (nếu có)</label>
+                        <input type="text" class="form-control" id="hinhAnh" name="hinhAnh"
+                               placeholder="Nhập URL hình ảnh minh họa">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Gửi báo cáo
+                        </button>
+                        <a th:href="@{/tenant/su-co}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

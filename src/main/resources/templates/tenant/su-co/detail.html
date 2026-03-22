@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Sự cố</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Sự cố', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-wrench me-2"></i>Chi tiết Sự cố #<span th:text="${suCo.ticketId}"></span></h2>
+        </div>
+
+        <!-- Incident Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin sự cố</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Phòng:</strong>
+                        <span th:text="${suCo.phongTro.soPhong}"></span>
+                        <span class="text-muted"> - </span>
+                        <span th:text="${suCo.phongTro.khuTro.tenKhu}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Loại sự cố:</strong>
+                        <span th:text="${suCo.loaiSuCo}"></span>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <strong>Mô tả:</strong>
+                        <p class="mt-1 mb-0" th:text="${suCo.moTa}"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Mức độ ưu tiên:</strong>
+                        <span th:if="${suCo.mucDoUuTien.name() == 'THAP'}" class="badge bg-success">Thấp</span>
+                        <span th:if="${suCo.mucDoUuTien.name() == 'TRUNG_BINH'}" class="badge bg-warning text-dark">Trung bình</span>
+                        <span th:if="${suCo.mucDoUuTien.name() == 'CAO'}" class="badge bg-danger">Cao</span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Trạng thái:</strong>
+                        <span th:if="${suCo.trangThai.name() == 'MOI'}" class="badge bg-primary">Mới</span>
+                        <span th:if="${suCo.trangThai.name() == 'DA_TIEP_NHAN'}" class="badge bg-info text-dark">Đã tiếp nhận</span>
+                        <span th:if="${suCo.trangThai.name() == 'DANG_SUA'}" class="badge bg-warning text-dark">Đang sửa</span>
+                        <span th:if="${suCo.trangThai.name() == 'DA_XONG'}" class="badge bg-success">Đã xong</span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Ngày tạo:</strong>
+                        <span th:text="${#temporals.format(suCo.ngayTao, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="col-12 mb-3" th:if="${suCo.hinhAnh != null and !suCo.hinhAnh.isEmpty()}">
+                        <strong>Hình ảnh:</strong>
+                        <div class="mt-1">
+                            <a th:href="${suCo.hinhAnh}" target="_blank" class="text-primary">
+                                <i class="bi bi-image me-1"></i>Xem hình ảnh
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-12" th:if="${suCo.ghiChuXuLy != null and !suCo.ghiChuXuLy.isEmpty()}">
+                        <strong>Ghi chú xử lý:</strong>
+                        <div class="alert alert-info mt-1 mb-0">
+                            <i class="bi bi-chat-left-text me-1"></i>
+                            <span th:text="${suCo.ghiChuXuLy}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <a th:href="@{/tenant/su-co}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
+        </a>
+
+    </div>
+</div>
+</body>
+</html>

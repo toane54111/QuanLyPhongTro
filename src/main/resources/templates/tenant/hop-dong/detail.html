@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Hợp đồng</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Hợp đồng', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>Chi tiết Hợp đồng #<span th:text="${hopDong.hopDongId}"></span></h2>
+        </div>
+
+        <!-- Contract Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hợp đồng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Phòng:</strong>
+                        <span th:text="${hopDong.phongTro.soPhong}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Khu trọ:</strong>
+                        <span th:text="${hopDong.phongTro.khuTro.tenKhu}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Ngày bắt đầu:</strong>
+                        <span th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Ngày kết thúc:</strong>
+                        <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Giá thuê:</strong>
+                        <span th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Tiền cọc:</strong>
+                        <span th:text="${#numbers.formatDecimal(hopDong.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Trạng thái:</strong>
+                        <span th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
+                        <span th:if="${hopDong.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
+                        <span th:if="${hopDong.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
+                    </div>
+                    <div class="col-md-6 mb-3" th:if="${hopDong.ghiChu != null and !hopDong.ghiChu.isEmpty()}">
+                        <strong>Ghi chú:</strong>
+                        <span th:text="${hopDong.ghiChu}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2">
+            <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
+               th:href="@{/tenant/hop-dong/yeu-cau-gia-han/{id}(id=${hopDong.hopDongId})}"
+               class="btn btn-success">
+                <i class="bi bi-calendar-plus me-1"></i>Yêu cầu gia hạn
+            </a>
+            <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
+               th:href="@{/tenant/hop-dong/yeu-cau-cham-dut/{id}(id=${hopDong.hopDongId})}"
+               class="btn btn-danger">
+                <i class="bi bi-x-circle me-1"></i>Yêu cầu chấm dứt
+            </a>
+            <a th:href="@{/tenant/hop-dong}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </a>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

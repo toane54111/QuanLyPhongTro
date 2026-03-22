@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Hóa đơn</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Hóa đơn', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-receipt me-2"></i>Chi tiết Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
+            <div>
+                <a th:if="${hoaDon.conNo > 0}"
+                   th:href="@{/landlord/hoa-don/payment/{id}(id=${hoaDon.hoaDonId})}"
+                   class="btn btn-success me-2">
+                    <i class="bi bi-cash-stack me-1"></i>Ghi nhận thanh toán
+                </a>
+                <a th:href="@{/landlord/hoa-don}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Card 1: Thông tin hóa đơn -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hóa đơn</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width: 40%;">Phòng</th>
+                                <td th:text="${hoaDon.hopDong.phongTro.soPhong}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Khách thuê</th>
+                                <td th:text="${hoaDon.hopDong.khachThue.hoTen}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Kỳ thanh toán</th>
+                                <td th:text="${hoaDon.kyThanhToan}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Hạn thanh toán</th>
+                                <td th:text="${#temporals.format(hoaDon.hanThanhToan, 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Trạng thái</th>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${hoaDon.trangThai.name() == 'DA_THANH_TOAN' ? 'bg-success' :
+                                              (hoaDon.trangThai.name() == 'CHUA_THANH_TOAN' ? 'bg-danger' :
+                                              (hoaDon.trangThai.name() == 'THANH_TOAN_MOT_PHAN' ? 'bg-warning' : 'bg-secondary'))}"
+                                          th:text="${hoaDon.trangThai.name() == 'DA_THANH_TOAN' ? 'Đã thanh toán' :
+                                              (hoaDon.trangThai.name() == 'CHUA_THANH_TOAN' ? 'Chưa thanh toán' :
+                                              (hoaDon.trangThai.name() == 'THANH_TOAN_MOT_PHAN' ? 'Thanh toán một phần' : hoaDon.trangThai.name()))}">
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Ngày tạo</th>
+                                <td th:text="${#temporals.format(hoaDon.ngayTao, 'dd/MM/yyyy HH:mm')}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Chi tiết thanh toán -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Chi tiết thanh toán</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table mb-0">
+                            <tbody>
+                            <tr>
+                                <td>Tiền phòng</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr>
+                                <td>Tiền điện</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr>
+                                <td>Tiền nước</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr>
+                                <td>Phí dịch vụ</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.phiDichVu, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr class="table-dark fw-bold">
+                                <td>Tổng tiền</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr class="text-success">
+                                <td>Đã thanh toán</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            <tr class="text-danger fw-bold">
+                                <td>Còn nợ</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Lịch sử giao dịch -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachGiaoDich.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Số tiền</th>
+                            <th>Phương thức</th>
+                            <th>Ngày giao dịch</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="gd, iter : ${danhSachGiaoDich}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${#numbers.formatDecimal(gd.soTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${gd.phuongThuc.name() == 'TIEN_MAT' ? 'bg-success' :
+                                          (gd.phuongThuc.name() == 'CHUYEN_KHOAN' ? 'bg-primary' : 'bg-info')}"
+                                      th:text="${gd.phuongThuc.name() == 'TIEN_MAT' ? 'Tiền mặt' :
+                                          (gd.phuongThuc.name() == 'CHUYEN_KHOAN' ? 'Chuyển khoản' : 'Online')}">
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(gd.ngayGiaoDich, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${gd.ghiChu}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${danhSachGiaoDich.isEmpty()}" class="text-center py-4">
+                        <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">Chưa có giao dịch nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

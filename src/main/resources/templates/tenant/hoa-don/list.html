@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Hóa đơn của tôi</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Hóa đơn của tôi', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-receipt me-2"></i>Hóa đơn của tôi</h2>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!hoaDons.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Kỳ thanh toán</th>
+                            <th>Tổng tiền</th>
+                            <th>Đã thanh toán</th>
+                            <th>Còn nợ</th>
+                            <th>Trạng thái</th>
+                            <th>Hạn TT</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd, iter : ${hoaDons}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
+                            <td th:text="${hd.kyThanhToan}"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span th:class="${hd.conNo > 0 ? 'text-danger fw-bold' : ''}"
+                                      th:text="${#numbers.formatDecimal(hd.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                            </td>
+                            <td>
+                                <span th:if="${hd.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa thanh toán</span>
+                                <span th:if="${hd.trangThai.name() == 'DA_THANH_TOAN'}" class="badge bg-success">Đã thanh toán</span>
+                                <span th:if="${hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">Thanh toán một phần</span>
+                            </td>
+                            <td th:text="${#temporals.format(hd.hanThanhToan, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <a th:href="@{/tenant/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${hoaDons.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-receipt text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Bạn chưa có hóa đơn nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

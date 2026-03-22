@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Ghi nhận thanh toán</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Ghi nhận thanh toán', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-cash-stack me-2"></i>Ghi nhận thanh toán - Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
+        </div>
+
+        <div class="row g-4">
+            <!-- Thông tin hóa đơn -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Thông tin hóa đơn</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="text-muted d-block">Tổng tiền</span>
+                            <span class="fs-5 fw-bold" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-muted d-block">Đã thanh toán</span>
+                            <span class="fs-5 text-success" th:text="${#numbers.formatDecimal(hoaDon.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block">Còn nợ</span>
+                            <span class="fs-5 fw-bold text-danger" th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form thanh toán -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Thông tin thanh toán</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/landlord/hoa-don/payment/{id}(id=${hoaDon.hoaDonId})}"
+                              th:object="${giaoDich}" method="post">
+                            <div class="mb-3">
+                                <label for="soTien" class="form-label">Số tiền <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="soTien"
+                                           th:field="*{soTien}" required min="1"
+                                           placeholder="Nhập số tiền thanh toán">
+                                    <span class="input-group-text">VND</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phuongThuc" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
+                                <select class="form-select" id="phuongThuc" th:field="*{phuongThuc}" required>
+                                    <option value="">-- Chọn phương thức --</option>
+                                    <option th:each="pt : ${phuongThucThanhToans}"
+                                            th:value="${pt}"
+                                            th:text="${pt.name() == 'TIEN_MAT' ? 'Tiền mặt' :
+                                                (pt.name() == 'CHUYEN_KHOAN' ? 'Chuyển khoản' : 'Online')}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ghiChu" class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="ghiChu" th:field="*{ghiChu}"
+                                          rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i>Xác nhận thanh toán
+                                </button>
+                                <a th:href="@{/landlord/hoa-don/detail/{id}(id=${hoaDon.hoaDonId})}"
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

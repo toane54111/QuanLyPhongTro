@@ -1,0 +1,154 @@
+/* ============================================
+   QUẢN LÝ NHÀ TRỌ - Custom Styles
+   ============================================ */
+
+:root {
+    --sidebar-width: 250px;
+    --primary: #0d6efd;
+    --dark: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    min-height: calc(100vh - 56px);
+    position: fixed;
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--primary);
+}
+
+.sidebar .nav-header {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Main content */
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: calc(100vh - 56px);
+}
+
+/* Dashboard cards */
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.stat-card .card-body {
+    padding: 1.25rem;
+}
+
+.stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.stat-card .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Tables */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 1.5rem;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+/* Status badges */
+.badge-trong { background-color: #198754; }
+.badge-da-thue { background-color: #dc3545; }
+.badge-bao-tri { background-color: #ffc107; color: #212529; }
+.badge-dang-hieu-luc { background-color: #0d6efd; }
+.badge-sap-het-han { background-color: #fd7e14; }
+.badge-da-cham-dut { background-color: #6c757d; }
+.badge-chua-tt { background-color: #dc3545; }
+.badge-da-tt { background-color: #198754; }
+.badge-tt-mot-phan { background-color: #ffc107; color: #212529; }
+
+/* Login page */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.login-card .card-body {
+    padding: 2.5rem;
+}
+
+/* Page header */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h2 {
+    font-weight: 700;
+    color: #212529;
+}
+
+/* Form styling */
+.form-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 2rem;
+}

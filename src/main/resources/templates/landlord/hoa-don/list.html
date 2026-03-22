@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Quản lý Hóa đơn</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Quản lý Hóa đơn', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa đơn</h2>
+            <a th:href="@{/landlord/hoa-don/create}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Lập hóa đơn
+            </a>
+        </div>
+
+        <!-- Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/landlord/hoa-don}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="trangThai" class="form-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="tt : ${trangThaiHoaDons}"
+                                    th:value="${tt}"
+                                    th:text="${tt.name() == 'CHUA_THANH_TOAN' ? 'Chưa thanh toán' : (tt.name() == 'DA_THANH_TOAN' ? 'Đã thanh toán' : 'Thanh toán một phần')}"
+                                    th:selected="${tt == selectedTrangThai}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Kỳ thanh toán</label>
+                        <input type="text" name="kyThanhToan" class="form-control" placeholder="YYYY-MM"
+                               th:value="${selectedKyThanhToan}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel me-1"></i>Lọc
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" th:if="${!danhSachHoaDon.isEmpty()}">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Khách thuê</th>
+                            <th>Kỳ thanh toán</th>
+                            <th>Tiền phòng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Hạn TT</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd, iter : ${danhSachHoaDon}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
+                            <td th:text="${hd.hopDong.khachThue.hoTen}"></td>
+                            <td th:text="${hd.kyThanhToan}"></td>
+                            <td th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td class="fw-bold" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <span th:if="${hd.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa TT</span>
+                                <span th:if="${hd.trangThai.name() == 'DA_THANH_TOAN'}" class="badge bg-success">Đã TT</span>
+                                <span th:if="${hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">TT một phần</span>
+                            </td>
+                            <td th:text="${hd.hanThanhToan != null ? #temporals.format(hd.hanThanhToan, 'dd/MM/yyyy') : ''}"></td>
+                            <td>
+                                <a th:href="@{/landlord/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
+                                   class="btn btn-sm btn-outline-info me-1">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                                <a th:if="${hd.trangThai.name() != 'DA_THANH_TOAN'}"
+                                   th:href="@{/landlord/hoa-don/thanh-toan/{id}(id=${hd.hoaDonId})}"
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-cash-coin"></i> Thanh toán
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div th:if="${danhSachHoaDon.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-receipt text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Chưa có hóa đơn nào. Hãy lập hóa đơn mới!</p>
+                        <a th:href="@{/landlord/hoa-don/create}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Lập hóa đơn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

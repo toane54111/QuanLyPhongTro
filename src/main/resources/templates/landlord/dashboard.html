@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Dashboard', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Page Header -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+                <p class="text-muted mb-0">Tổng quan hệ thống quản lý nhà trọ</p>
+            </div>
+            <span class="text-muted" th:text="'Hôm nay: ' + ${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}"></span>
+        </div>
+
+        <!-- Stat Cards Row 1 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                            <i class="bi bi-door-open"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${tongPhong}">0</div>
+                            <div class="stat-label">Tổng phòng</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${phongTrong}">0</div>
+                            <div class="stat-label">Phòng trống</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3">
+                            <i class="bi bi-house-check"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${phongDaThue}">0</div>
+                            <div class="stat-label">Đã cho thuê</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${phongBaoTri}">0</div>
+                            <div class="stat-label">Bảo trì</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards Row 2 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${hopDongHieuLuc}">0</div>
+                            <div class="stat-label">Hợp đồng hiệu lực</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${hoaDonChuaTT}">0</div>
+                            <div class="stat-label">Hóa đơn chưa TT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${tongKhachThue}">0</div>
+                            <div class="stat-label">Khách thuê</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                            <i class="bi bi-wrench"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value" th:text="${suCoMoi}">0</div>
+                            <div class="stat-label">Sự cố mới</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tỷ lệ lấp đầy -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Tỷ lệ lấp đầy</h6>
+                        <div class="progress" style="height: 24px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 th:style="'width: ' + ${tyLeLapDay} + '%'"
+                                 th:text="${tyLeLapDay} + '%'">
+                            </div>
+                        </div>
+                        <p class="text-muted mt-2 mb-0 small">
+                            <span th:text="${phongDaThue}">0</span> / <span th:text="${tongPhong}">0</span> phòng đã cho thuê
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-lightning me-2"></i>Thao tác nhanh</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a th:href="@{/landlord/hop-dong/create}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i>Lập hợp đồng
+                            </a>
+                            <a th:href="@{/landlord/chi-so/create}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-pencil-square me-1"></i>Ghi chỉ số
+                            </a>
+                            <a th:href="@{/landlord/hoa-don/create}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-receipt me-1"></i>Lập hóa đơn
+                            </a>
+                            <a th:href="@{/landlord/phong-tro}" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-door-open me-1"></i>Quản lý phòng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
