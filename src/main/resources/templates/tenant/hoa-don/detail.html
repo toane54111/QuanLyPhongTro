@@ -6,12 +6,12 @@
     <div th:fragment="mainContent">
 
         <!-- Flash messages -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <span th:text="${success}"></span>
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${successMessage}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <span th:text="${error}"></span>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMessage}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
@@ -104,6 +104,7 @@
                         <select class="form-select" id="phuongThuc" name="phuongThuc" required>
                             <option value="TIEN_MAT">Tiền mặt</option>
                             <option value="CHUYEN_KHOAN">Chuyển khoản</option>
+                            <option value="ONLINE">Thanh toán Online (VNPay/MoMo)</option>
                         </select>
                     </div>
                     <div class="alert alert-info">

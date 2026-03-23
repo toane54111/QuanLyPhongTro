@@ -7,6 +7,7 @@ import com.nhatro.quanlynhatro.enums.MucDoUuTien;
 import com.nhatro.quanlynhatro.enums.TrangThaiSuCo;
 import com.nhatro.quanlynhatro.service.HopDongService;
 import com.nhatro.quanlynhatro.service.NguoiDungService;
+import com.nhatro.quanlynhatro.service.ThongBaoService;
 import com.nhatro.quanlynhatro.service.YeuCauSuCoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ public class TenantSuCoController {
     private final NguoiDungService nguoiDungService;
     private final YeuCauSuCoService yeuCauSuCoService;
     private final HopDongService hopDongService;
+    private final ThongBaoService thongBaoService;
 
     private NguoiDung getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -101,7 +103,14 @@ public class TenantSuCoController {
                     .trangThai(TrangThaiSuCo.MOI)
                     .ngayTao(LocalDateTime.now())
                     .build();
-            yeuCauSuCoService.save(suCo);
+            YeuCauSuCo saved = yeuCauSuCoService.save(suCo);
+
+            // UC14/UC23: Gửi thông báo cho chủ trọ
+            thongBaoService.notifyAllLandlords(
+                    "Sự cố mới - Phòng " + activeContract.getPhongTro().getSoPhong(),
+                    "Khách thuê " + currentUser.getHoTen() + " báo sự cố: " + loaiSuCo
+                            + " (Mức độ: " + mucDo.name() + ")",
+                    "/landlord/su-co/detail/" + saved.getTicketId());
 
             redirectAttributes.addFlashAttribute("successMessage", "Gửi báo sự cố thành công!");
             return "redirect:/tenant/su-co";

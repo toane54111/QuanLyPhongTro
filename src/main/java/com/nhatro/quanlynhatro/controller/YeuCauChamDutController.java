@@ -27,8 +27,11 @@ public class YeuCauChamDutController {
     @PostMapping("/approve/{id}")
     public String approve(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            java.math.BigDecimal tienHoanCoc = yeuCauChamDutService.tinhTienHoanCoc(id);
             yeuCauChamDutService.approve(id);
-            redirectAttributes.addFlashAttribute("success", "Phê duyệt yêu cầu chấm dứt thành công!");
+            redirectAttributes.addFlashAttribute("success",
+                    "Phê duyệt chấm dứt hợp đồng thành công! Tiền hoàn cọc: "
+                    + String.format("%,.0f", tienHoanCoc) + " VNĐ");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi phê duyệt: " + e.getMessage());
         }

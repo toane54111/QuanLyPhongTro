@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Xem trước hóa đơn hàng loạt</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Xem trước hóa đơn', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <span th:text="${warning}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${chiSoWarning}" class="alert alert-warning alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <span th:text="${chiSoWarning}"></span>
+            Tiền điện/nước của các phòng này sẽ bằng 0.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-receipt-cutoff me-2"></i>Bảng hóa đơn dự kiến - Kỳ <span th:text="${kyThanhToan}"></span></h2>
+            <a th:href="@{/landlord/hoa-don/batch}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </a>
+        </div>
+
+        <!-- Preview Table -->
+        <div class="card" th:if="${previews != null && !previews.isEmpty()}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Bước 2: Xác nhận tạo hóa đơn</h5>
+                <span class="badge bg-primary" th:text="'Tổng: ' + ${previews.size()} + ' hóa đơn'"></span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Phòng</th>
+                            <th>Khách thuê</th>
+                            <th class="text-end">Tiền phòng</th>
+                            <th class="text-end">Tiền điện</th>
+                            <th class="text-end">Tiền nước</th>
+                            <th class="text-end">Phí DV</th>
+                            <th class="text-end">Tổng tiền</th>
+                            <th>Chỉ số</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p, iter : ${previews}">
+                            <td th:text="${iter.count}"></td>
+                            <td th:text="${p['soPhong']}"></td>
+                            <td th:text="${p['khachThue']}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(p['tienPhong'], 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(p['tienDien'], 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(p['tienNuoc'], 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(p['phiDichVu'], 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(p['tongTien'], 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td>
+                                <span th:if="${p['coChiSo']}" class="badge bg-success">Đã ghi</span>
+                                <span th:unless="${p['coChiSo']}" class="badge bg-warning">Chưa ghi</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Confirm Form -->
+                <form th:action="@{/landlord/hoa-don/batch/create}" method="post" class="mt-3">
+                    <input type="hidden" name="kyThanhToan" th:value="${kyThanhToan}">
+                    <input type="hidden" name="hanThanhToan" th:value="${hanThanhToan}">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg"
+                                onclick="return confirm('Xác nhận tạo hóa đơn cho tất cả phòng?');">
+                            <i class="bi bi-check-circle me-1"></i>Xác nhận tạo hóa đơn
+                        </button>
+                        <a th:href="@{/landlord/hoa-don/batch}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-x-circle me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div th:if="${previews == null || previews.isEmpty()}" class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-receipt text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Không có phòng nào cần lập hóa đơn cho kỳ này.</p>
+                <a th:href="@{/landlord/hoa-don/batch}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-1"></i>Chọn kỳ khác
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

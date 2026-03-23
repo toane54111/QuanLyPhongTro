@@ -4,13 +4,19 @@ import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HoaDon;
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
 import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
+import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.service.HoaDonService;
 import com.nhatro.quanlynhatro.service.HopDongService;
+import com.nhatro.quanlynhatro.service.ThongBaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/landlord/hoa-don")
@@ -19,6 +25,7 @@ public class HoaDonController {
 
     private final HoaDonService hoaDonService;
     private final HopDongService hopDongService;
+    private final ThongBaoService thongBaoService;
 
     @GetMapping
     public String list(@RequestParam(required = false) TrangThaiHoaDon trangThai,
@@ -56,6 +63,70 @@ public class HoaDonController {
             redirectAttributes.addFlashAttribute("success", "Tạo hóa đơn thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi tạo hóa đơn: " + e.getMessage());
+        }
+        return "redirect:/landlord/hoa-don";
+    }
+
+    // === LẬP HÓA ĐƠN HÀNG LOẠT (UC13 theo Activity Diagram) ===
+
+    @GetMapping("/batch")
+    public String showBatchForm(Model model) {
+        return "landlord/hoa-don/batch-form";
+    }
+
+    @PostMapping("/batch/preview")
+    public String previewBatch(@RequestParam String kyThanhToan,
+                               @RequestParam(required = false) String hanThanhToan,
+                               Model model) {
+        try {
+            List<Map<String, Object>> previews = hoaDonService.previewBatchInvoices(kyThanhToan);
+            model.addAttribute("previews", previews);
+            model.addAttribute("kyThanhToan", kyThanhToan);
+            model.addAttribute("hanThanhToan", hanThanhToan != null && !hanThanhToan.isEmpty()
+                    ? hanThanhToan : LocalDate.now().plusDays(15).toString());
+
+            if (previews.isEmpty()) {
+                model.addAttribute("warning", "Không có phòng nào cần lập hóa đơn cho kỳ " + kyThanhToan
+                        + " (đã lập hết hoặc không có hợp đồng hiệu lực).");
+            }
+
+            long phongThieuChiSo = previews.stream().filter(p -> !(Boolean) p.get("coChiSo")).count();
+            if (phongThieuChiSo > 0) {
+                model.addAttribute("chiSoWarning",
+                        "Có " + phongThieuChiSo + " phòng chưa ghi chỉ số điện nước cho kỳ này.");
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi xem trước hóa đơn: " + e.getMessage());
+        }
+        return "landlord/hoa-don/batch-preview";
+    }
+
+    @PostMapping("/batch/create")
+    public String createBatch(@RequestParam String kyThanhToan,
+                              @RequestParam(required = false) String hanThanhToan,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            LocalDate han = (hanThanhToan != null && !hanThanhToan.isEmpty())
+                    ? LocalDate.parse(hanThanhToan) : LocalDate.now().plusDays(15);
+            int count = hoaDonService.createBatchInvoices(kyThanhToan, han);
+
+            // UC14 (extend): Gửi thông báo cho khách thuê
+            List<HopDong> activeContracts = hopDongService.findActiveContracts();
+            for (HopDong hd : activeContracts) {
+                if (hoaDonService.existsByHopDongIdAndKyThanhToan(hd.getHopDongId(), kyThanhToan)) {
+                    thongBaoService.notifyUser(
+                            hd.getKhachThue().getUserId(),
+                            "Hóa đơn mới - Kỳ " + kyThanhToan,
+                            "Hóa đơn phòng " + hd.getPhongTro().getSoPhong() + " đã được lập cho kỳ " + kyThanhToan
+                                    + ". Vui lòng thanh toán trước hạn.",
+                            "/tenant/hoa-don");
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Tạo hóa đơn hàng loạt thành công! Đã tạo " + count + " hóa đơn cho kỳ " + kyThanhToan);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi tạo hóa đơn hàng loạt: " + e.getMessage());
         }
         return "redirect:/landlord/hoa-don";
     }

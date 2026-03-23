@@ -71,15 +71,20 @@ public class TenantHoaDonController {
             NguoiDung currentUser = getCurrentUser();
             HoaDon hoaDon = hoaDonService.findById(id);
 
-            // Kiểm tra quyền sở hữu
             if (!hoaDon.getHopDong().getKhachThue().getUserId().equals(currentUser.getUserId())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thanh toán hóa đơn này");
                 return "redirect:/tenant/hoa-don";
             }
 
             PhuongThucThanhToan pt = PhuongThucThanhToan.valueOf(phuongThuc);
-            hoaDonService.thanhToan(hoaDon, pt);
 
+            // Nếu thanh toán ONLINE → chuyển hướng đến trang giả lập cổng thanh toán (UC22)
+            if (pt == PhuongThucThanhToan.ONLINE) {
+                return "redirect:/tenant/hoa-don/payment-gateway/" + id + "?phuongThuc=" + phuongThuc;
+            }
+
+            // Thanh toán tiền mặt/chuyển khoản → ghi nhận trực tiếp
+            hoaDonService.thanhToan(hoaDon, pt);
             redirectAttributes.addFlashAttribute("successMessage", "Thanh toán hóa đơn thành công!");
             return "redirect:/tenant/hoa-don/detail/" + id;
         } catch (IllegalArgumentException e) {
@@ -89,5 +94,72 @@ public class TenantHoaDonController {
             redirectAttributes.addFlashAttribute("errorMessage", "Thanh toán thất bại: " + e.getMessage());
             return "redirect:/tenant/hoa-don/detail/" + id;
         }
+    }
+
+    /**
+     * UC22: Hiển thị trang giả lập cổng thanh toán (VNPay/MoMo)
+     */
+    @GetMapping("/payment-gateway/{id}")
+    public String showPaymentGateway(@PathVariable Long id,
+                                     @RequestParam String phuongThuc,
+                                     Model model, RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung currentUser = getCurrentUser();
+            HoaDon hoaDon = hoaDonService.findById(id);
+
+            if (!hoaDon.getHopDong().getKhachThue().getUserId().equals(currentUser.getUserId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thanh toán hóa đơn này");
+                return "redirect:/tenant/hoa-don";
+            }
+
+            String maDon = "HD" + hoaDon.getHoaDonId() + "-" + System.currentTimeMillis();
+            model.addAttribute("hoaDon", hoaDon);
+            model.addAttribute("phuongThuc", phuongThuc);
+            model.addAttribute("maDon", maDon);
+            return "tenant/hoa-don/payment-gateway";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/tenant/hoa-don";
+        }
+    }
+
+    /**
+     * UC22: Callback xử lý kết quả từ cổng thanh toán
+     */
+    @PostMapping("/payment-callback/{id}")
+    public String paymentCallback(@PathVariable Long id,
+                                  @RequestParam String ketQua,
+                                  @RequestParam String phuongThuc,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung currentUser = getCurrentUser();
+            HoaDon hoaDon = hoaDonService.findById(id);
+
+            if (!hoaDon.getHopDong().getKhachThue().getUserId().equals(currentUser.getUserId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền");
+                return "redirect:/tenant/hoa-don";
+            }
+
+            switch (ketQua) {
+                case "THANH_CONG":
+                    hoaDonService.thanhToan(hoaDon, PhuongThucThanhToan.ONLINE);
+                    redirectAttributes.addFlashAttribute("successMessage",
+                            "Thanh toán online thành công! Hóa đơn đã được cập nhật.");
+                    break;
+                case "THAT_BAI":
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Thanh toán thất bại. Vui lòng thử lại sau.");
+                    break;
+                case "HUY":
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Thanh toán đã bị hủy. Hóa đơn vẫn ở trạng thái chưa thanh toán.");
+                    break;
+                default:
+                    redirectAttributes.addFlashAttribute("errorMessage", "Kết quả không hợp lệ");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xử lý thanh toán: " + e.getMessage());
+        }
+        return "redirect:/tenant/hoa-don/detail/" + id;
     }
 }

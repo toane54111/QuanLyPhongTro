@@ -16,7 +16,7 @@ public class GiaoDich {
     private Long giaoDichId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hoa_don_id", nullable = false)
+    @JoinColumn(name = "hoa_don_id", nullable = true)
     private HoaDon hoaDon;
 
     @Column(nullable = false, precision = 12, scale = 0)

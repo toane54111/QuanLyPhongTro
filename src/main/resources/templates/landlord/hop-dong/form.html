@@ -31,20 +31,44 @@
                             <select name="phongId" class="form-select" required>
                                 <option value="">-- Chọn phòng --</option>
                                 <option th:each="phong : ${danhSachPhongTrong}"
-                                        th:value="${phong.phongTroId}"
+                                        th:value="${phong.phongId}"
                                         th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu + ' (Giá: ' + #numbers.formatDecimal(phong.giaThue, 0, 'COMMA', 0, 'POINT') + ' VND)'}">
                                 </option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Khách thuê <span class="text-danger">*</span></label>
-                            <select name="khachThueId" class="form-select" required>
-                                <option value="">-- Chọn khách thuê --</option>
-                                <option th:each="kt : ${danhSachKhachThue}"
-                                        th:value="${kt.nguoiDungId}"
-                                        th:text="${kt.hoTen + ' - ' + kt.email}">
-                                </option>
-                            </select>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="toggleNewTenant"
+                                       name="taoKhachMoi" value="true"
+                                       onchange="document.getElementById('existingTenant').style.display = this.checked ? 'none' : 'block';
+                                                  document.getElementById('newTenant').style.display = this.checked ? 'block' : 'none';
+                                                  if(!this.checked) document.getElementById('khachThueSelect').required = true;
+                                                  else document.getElementById('khachThueSelect').required = false;">
+                                <label class="form-check-label" for="toggleNewTenant">Tạo khách thuê mới</label>
+                            </div>
+                            <!-- Chọn khách thuê đã có -->
+                            <div id="existingTenant">
+                                <select name="khachThueId" id="khachThueSelect" class="form-select" required>
+                                    <option value="">-- Chọn khách thuê --</option>
+                                    <option th:each="kt : ${danhSachKhachThue}"
+                                            th:value="${kt.userId}"
+                                            th:text="${kt.hoTen + ' - ' + kt.email}">
+                                    </option>
+                                </select>
+                            </div>
+                            <!-- Tạo khách thuê mới (ẩn mặc định) -->
+                            <div id="newTenant" style="display:none;">
+                                <input type="text" class="form-control mb-2" name="newKhachHoTen"
+                                       placeholder="Họ tên *">
+                                <input type="email" class="form-control mb-2" name="newKhachEmail"
+                                       placeholder="Email *">
+                                <input type="text" class="form-control mb-2" name="newKhachSdt"
+                                       placeholder="Số điện thoại">
+                                <input type="text" class="form-control" name="newKhachCccd"
+                                       placeholder="CCCD">
+                                <small class="form-text text-muted">Mật khẩu mặc định: 123456</small>
+                            </div>
                         </div>
                     </div>
 

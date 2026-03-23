@@ -18,6 +18,14 @@
         <i class="bi bi-house-door-fill me-2"></i>Quản Lý Nhà Trọ
     </a>
     <div class="d-flex align-items-center">
+        <!-- Thông báo bell icon -->
+        <a href="#" class="text-white me-3 position-relative text-decoration-none"
+           data-bs-toggle="offcanvas" data-bs-target="#notificationPanel">
+            <i class="bi bi-bell fs-5"></i>
+            <span th:if="${soThongBaoChuaDoc != null && soThongBaoChuaDoc > 0}"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  th:text="${soThongBaoChuaDoc}">0</span>
+        </a>
         <span class="text-white me-3">
             <i class="bi bi-person-circle me-1"></i>
             <span sec:authentication="name">User</span>
@@ -148,6 +156,39 @@
         <div th:replace="${content}"></div>
     </main>
 
+</div>
+
+<!-- Notification Offcanvas Panel -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="notificationPanel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title"><i class="bi bi-bell me-2"></i>Thông báo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div th:if="${danhSachThongBao != null && !danhSachThongBao.isEmpty()}">
+            <form th:action="@{/thong-bao/mark-all-read}" method="post" class="mb-3">
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-check-all me-1"></i>Đánh dấu tất cả đã đọc
+                </button>
+            </form>
+            <div th:each="tb : ${danhSachThongBao}" class="card mb-2 border-start border-primary border-3">
+                <div class="card-body py-2 px-3">
+                    <h6 class="card-title mb-1 small fw-bold" th:text="${tb.tieuDe}"></h6>
+                    <p class="card-text small text-muted mb-1" th:text="${tb.noiDung}"></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" th:text="${#temporals.format(tb.ngayTao, 'dd/MM HH:mm')}"></small>
+                        <a th:if="${tb.link != null}" th:href="${tb.link}" class="btn btn-sm btn-outline-primary py-0">
+                            Xem
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${danhSachThongBao == null || danhSachThongBao.isEmpty()}" class="text-center py-5">
+            <i class="bi bi-bell-slash text-muted" style="font-size: 2rem;"></i>
+            <p class="text-muted mt-2">Không có thông báo mới</p>
+        </div>
+    </div>
 </div>
 
 <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>

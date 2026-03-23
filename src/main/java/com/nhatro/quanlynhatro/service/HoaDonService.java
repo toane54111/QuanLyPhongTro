@@ -19,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -177,5 +180,90 @@ public class HoaDonService {
 
     public boolean existsByHopDongIdAndKyThanhToan(Long hopDongId, String kyThanhToan) {
         return hoaDonRepository.existsByHopDong_HopDongIdAndKyThanhToan(hopDongId, kyThanhToan);
+    }
+
+    /**
+     * Xem trước (preview) hóa đơn hàng loạt cho tất cả hợp đồng đang hiệu lực
+     * Trả về danh sách Map chứa thông tin dự kiến cho từng phòng
+     */
+    public List<Map<String, Object>> previewBatchInvoices(String kyThanhToan) {
+        List<HopDong> activeContracts = hopDongRepository.findByTrangThai(
+                com.nhatro.quanlynhatro.enums.TrangThaiHopDong.DANG_HIEU_LUC);
+        List<Map<String, Object>> previews = new ArrayList<>();
+
+        for (HopDong hopDong : activeContracts) {
+            // Bỏ qua nếu đã có hóa đơn cho kỳ này
+            if (hoaDonRepository.existsByHopDong_HopDongIdAndKyThanhToan(hopDong.getHopDongId(), kyThanhToan)) {
+                continue;
+            }
+
+            Long phongId = hopDong.getPhongTro().getPhongId();
+            BigDecimal tienPhong = hopDong.getGiaThue();
+            BigDecimal tienDien = BigDecimal.ZERO;
+            BigDecimal tienNuoc = BigDecimal.ZERO;
+            boolean coChiSo = false;
+
+            Optional<ChiSoDienNuoc> chiSoOpt = chiSoDienNuocRepository.findByPhongTro_PhongIdAndKyGhi(phongId, kyThanhToan);
+            if (chiSoOpt.isPresent()) {
+                coChiSo = true;
+                ChiSoDienNuoc chiSo = chiSoOpt.get();
+                Optional<DichVu> dienDV = dichVuRepository.findByTenDV("Điện");
+                if (dienDV.isPresent()) {
+                    tienDien = dienDV.get().getDonGia().multiply(BigDecimal.valueOf(chiSo.getDienTieuThu()));
+                }
+                Optional<DichVu> nuocDV = dichVuRepository.findByTenDV("Nước");
+                if (nuocDV.isPresent()) {
+                    tienNuoc = nuocDV.get().getDonGia().multiply(BigDecimal.valueOf(chiSo.getNuocTieuThu()));
+                }
+            }
+
+            BigDecimal phiDichVu = BigDecimal.ZERO;
+            List<DichVu> allServices = dichVuRepository.findAll();
+            for (DichVu dv : allServices) {
+                if (!"Điện".equals(dv.getTenDV()) && !"Nước".equals(dv.getTenDV())) {
+                    phiDichVu = phiDichVu.add(dv.getDonGia());
+                }
+            }
+
+            BigDecimal tongTien = tienPhong.add(tienDien).add(tienNuoc).add(phiDichVu);
+
+            Map<String, Object> preview = new HashMap<>();
+            preview.put("hopDongId", hopDong.getHopDongId());
+            preview.put("soPhong", hopDong.getPhongTro().getSoPhong());
+            preview.put("khachThue", hopDong.getKhachThue().getHoTen());
+            preview.put("tienPhong", tienPhong);
+            preview.put("tienDien", tienDien);
+            preview.put("tienNuoc", tienNuoc);
+            preview.put("phiDichVu", phiDichVu);
+            preview.put("tongTien", tongTien);
+            preview.put("coChiSo", coChiSo);
+            previews.add(preview);
+        }
+        return previews;
+    }
+
+    /**
+     * Tạo hóa đơn hàng loạt cho tất cả hợp đồng đang hiệu lực trong kỳ
+     */
+    @Transactional
+    public int createBatchInvoices(String kyThanhToan, LocalDate hanThanhToan) {
+        List<HopDong> activeContracts = hopDongRepository.findByTrangThai(
+                com.nhatro.quanlynhatro.enums.TrangThaiHopDong.DANG_HIEU_LUC);
+        int count = 0;
+
+        for (HopDong hopDong : activeContracts) {
+            if (hoaDonRepository.existsByHopDong_HopDongIdAndKyThanhToan(hopDong.getHopDongId(), kyThanhToan)) {
+                continue;
+            }
+            try {
+                HoaDon temp = new HoaDon();
+                temp.setHanThanhToan(hanThanhToan);
+                create(temp, hopDong.getHopDongId(), kyThanhToan);
+                count++;
+            } catch (Exception e) {
+                // Bỏ qua phòng lỗi, tiếp tục phòng khác
+            }
+        }
+        return count;
     }
 }

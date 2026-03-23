@@ -1,10 +1,13 @@
 package com.nhatro.quanlynhatro.service;
 
+import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.entity.NguoiDung;
 import com.nhatro.quanlynhatro.entity.PhongTro;
+import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
 import com.nhatro.quanlynhatro.enums.TrangThaiHopDong;
 import com.nhatro.quanlynhatro.enums.TrangThaiPhong;
+import com.nhatro.quanlynhatro.repository.GiaoDichRepository;
 import com.nhatro.quanlynhatro.repository.HopDongRepository;
 import com.nhatro.quanlynhatro.repository.NguoiDungRepository;
 import com.nhatro.quanlynhatro.repository.PhongTroRepository;
@@ -12,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +27,7 @@ public class HopDongService {
     private final HopDongRepository hopDongRepository;
     private final PhongTroRepository phongTroRepository;
     private final NguoiDungRepository nguoiDungRepository;
+    private final GiaoDichRepository giaoDichRepository;
 
     public List<HopDong> findAll(TrangThaiHopDong trangThai) {
         if (trangThai != null) {
@@ -81,13 +87,39 @@ public class HopDongService {
         phongTro.setTrangThai(TrangThaiPhong.DA_THUE);
         phongTroRepository.save(phongTro);
 
-        return hopDongRepository.save(hopDong);
+        HopDong saved = hopDongRepository.save(hopDong);
+
+        // Ghi nhận tiền cọc (theo Activity Diagram UC07)
+        BigDecimal tienCoc = hopDong.getTienCoc();
+        if (tienCoc != null && tienCoc.compareTo(BigDecimal.ZERO) > 0) {
+            GiaoDich giaoDichCoc = GiaoDich.builder()
+                    .hoaDon(null)
+                    .soTien(tienCoc)
+                    .phuongThuc(PhuongThucThanhToan.TIEN_MAT)
+                    .ngayGiaoDich(LocalDateTime.now())
+                    .ghiChu("Tiền cọc hợp đồng phòng " + phongTro.getSoPhong()
+                            + " - Khách: " + khachThue.getHoTen())
+                    .build();
+            giaoDichRepository.save(giaoDichCoc);
+        }
+
+        return saved;
     }
 
     @Transactional
-    public HopDong extend(Long hopDongId, Integer soThangGiaHan) {
+    public HopDong extend(Long hopDongId, java.time.LocalDate ngayKetThucMoi) {
         HopDong hopDong = getById(hopDongId);
-        hopDong.setNgayKetThuc(hopDong.getNgayKetThuc().plusMonths(soThangGiaHan));
+
+        // Validate theo Sequence Diagram: ngayKTMoi > ngayKTCu && ngayKTMoi > ngayHienTai
+        if (ngayKetThucMoi.isBefore(hopDong.getNgayKetThuc()) || ngayKetThucMoi.isEqual(hopDong.getNgayKetThuc())) {
+            throw new RuntimeException("Ngày kết thúc mới phải sau ngày kết thúc hiện tại ("
+                    + hopDong.getNgayKetThuc() + ")");
+        }
+        if (ngayKetThucMoi.isBefore(java.time.LocalDate.now())) {
+            throw new RuntimeException("Ngày kết thúc mới phải sau ngày hiện tại");
+        }
+
+        hopDong.setNgayKetThuc(ngayKetThucMoi);
         hopDong.setTrangThai(TrangThaiHopDong.DANG_HIEU_LUC);
         return hopDongRepository.save(hopDong);
     }
