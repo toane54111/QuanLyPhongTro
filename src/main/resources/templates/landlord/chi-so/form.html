@@ -36,9 +36,9 @@
                             <select name="phongId" class="form-select" required>
                                 <option value="">-- Chọn phòng --</option>
                                 <option th:each="phong : ${danhSachPhongTro}"
-                                        th:value="${phong.phongTroId}"
+                                        th:value="${phong.phongId}"
                                         th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu}"
-                                        th:selected="${chiSoDienNuoc.phongTro != null && chiSoDienNuoc.phongTro.phongTroId == phong.phongTroId}">
+                                        th:selected="${chiSoDienNuoc.phongTro != null && chiSoDienNuoc.phongTro.phongId == phong.phongId}">
                                 </option>
                             </select>
                         </div>
