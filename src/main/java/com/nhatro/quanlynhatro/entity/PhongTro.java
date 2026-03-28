@@ -47,4 +47,21 @@ public class PhongTro {
 
     @OneToMany(mappedBy = "phongTro")
     private List<YeuCauSuCo> yeuCauSuCos;
+
+    @OneToMany(mappedBy = "phongTro", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaiSanPhongTro> taiSanPhongTros;
+
+    @OneToMany(mappedBy = "phongTro", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ThanhVienPhongTro> thanhViens;
+
+    @Transient
+    public HopDong getHopDongHienTai() {
+        if (hopDongs == null) return null;
+        return hopDongs.stream()
+                .filter(hd -> hd.getTrangThai().name().equals("DANG_HIEU_LUC"))
+                .findFirst()
+                .orElse(null);
+    }
 }
+
+
