@@ -55,9 +55,9 @@
                             </td>
                             <td th:text="${#temporals.format(kt.ngayTao, 'dd/MM/yyyy')}"></td>
                             <td>
-                                <a th:href="@{/landlord/khach-thue/detail/{id}(id=${kt.userId})}"
-                                   class="btn btn-sm btn-outline-primary me-1">
-                                    <i class="bi bi-eye"></i> Chi tiết
+                                <a th:href="@{/landlord/khach-thue/edit/{id}(id=${kt.userId})}"
+                                   class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-pencil-square"></i> Sửa
                                 </a>
                                 <form th:action="@{/landlord/khach-thue/toggle-status/{id}(id=${kt.userId})}"
                                       method="post" class="d-inline">

@@ -10,5 +10,4 @@ public interface ChiSoDienNuocRepository extends JpaRepository<ChiSoDienNuoc, Lo
     Optional<ChiSoDienNuoc> findByPhongTro_PhongIdAndKyGhi(Long phongId, String kyGhi);
     boolean existsByPhongTro_PhongIdAndKyGhi(Long phongId, String kyGhi);
     Optional<ChiSoDienNuoc> findTopByPhongTro_PhongIdOrderByKyGhiDesc(Long phongId);
-    List<ChiSoDienNuoc> findByPhongTro_PhongIdOrderByKyGhiDesc(Long phongId);
 }
