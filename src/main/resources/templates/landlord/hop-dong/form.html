@@ -23,15 +23,17 @@
         <!-- Form -->
         <div class="card">
             <div class="card-body">
-                <form th:action="@{/landlord/hop-dong/create}" method="post" th:object="${hopDong}">
+                <form th:action="@{/landlord/hop-dong/confirm}" method="post" th:object="${hopDong}">
 
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Phòng trọ <span class="text-danger">*</span></label>
-                            <select name="phongId" class="form-select" required>
+                            <select name="phongId" id="phongSelect" class="form-select" required
+                                    onchange="onPhongChange(this)">
                                 <option value="">-- Chọn phòng --</option>
                                 <option th:each="phong : ${danhSachPhongTrong}"
                                         th:value="${phong.phongId}"
+                                        th:attr="data-gia=${phong.giaThue}"
                                         th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu + ' (Giá: ' + #numbers.formatDecimal(phong.giaThue, 0, 'COMMA', 0, 'POINT') + ' VND)'}">
                                 </option>
                             </select>
@@ -75,18 +77,25 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" th:field="*{ngayBatDau}" required>
+                            <input type="date" class="form-control" th:field="*{ngayBatDau}" id="ngayBatDau"
+                                   required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" th:field="*{ngayKetThuc}" required>
+                            <input type="date" class="form-control" th:field="*{ngayKetThuc}" id="ngayKetThuc"
+                                   required>
+                            <div id="ngayKetThucError" class="invalid-feedback"></div>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Giá thuê (VND) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" th:field="*{giaThue}" required min="0">
+                            <label class="form-label">Giá thuê (VND/tháng) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control bg-light" th:field="*{giaThue}"
+                                   id="giaThueInput" required min="0" readonly>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Giá thuê lấy từ thông tin phòng. Muốn thay đổi vui lòng chỉnh sửa trong quản lý phòng trọ.
+                            </small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tiền cọc (VND) <span class="text-danger">*</span></label>
@@ -102,11 +111,12 @@
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-1"></i>
                         Khi lập hợp đồng, phòng sẽ tự động chuyển sang trạng thái 'Đã thuê'.
+                        Thời hạn hợp đồng tối thiểu là <strong>6 tháng</strong>.
                     </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-1"></i>Lập hợp đồng
+                            <i class="bi bi-arrow-right-circle me-1"></i>Tiếp tục xác nhận
                         </button>
                         <a th:href="@{/landlord/hop-dong}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-1"></i>Hủy
@@ -115,6 +125,112 @@
                 </form>
             </div>
         </div>
+
+        <!-- Script phải nằm TRONG mainContent fragment để không bị mất khi render layout -->
+        <script>
+            // === Utility functions ===
+            function formatDateYmd(date) {
+                var y = date.getFullYear();
+                var m = String(date.getMonth() + 1).padStart(2, '0');
+                var d = String(date.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + d;
+            }
+
+            function addMonths(dateStr, months) {
+                var date = new Date(dateStr + 'T00:00:00');
+                date.setMonth(date.getMonth() + months);
+                return formatDateYmd(date);
+            }
+
+            // === Phòng trọ → auto-fill giá thuê ===
+            function onPhongChange(select) {
+                var option = select.options[select.selectedIndex];
+                var gia = option.getAttribute('data-gia');
+                document.getElementById('giaThueInput').value = gia ? gia : '';
+            }
+
+            // === Validate ngày kết thúc >= ngày bắt đầu + 6 tháng ===
+            function validateNgayKetThuc() {
+                var elBatDau = document.getElementById('ngayBatDau');
+                var elKetThuc = document.getElementById('ngayKetThuc');
+                var errorDiv = document.getElementById('ngayKetThucError');
+
+                if (elBatDau.value && elKetThuc.value) {
+                    var minDate = addMonths(elBatDau.value, 6);
+                    if (elKetThuc.value < minDate) {
+                        elKetThuc.classList.add('is-invalid');
+                        errorDiv.textContent = 'Ngày kết thúc phải ít nhất 6 tháng sau ngày bắt đầu (' + minDate + ')';
+                        return false;
+                    } else {
+                        elKetThuc.classList.remove('is-invalid');
+                        errorDiv.textContent = '';
+                        return true;
+                    }
+                }
+                return true;
+            }
+
+            // === Khởi tạo sau khi flatpickr đã init (layout script chạy sau content) ===
+            // Dùng setTimeout để đảm bảo chạy SAU layout script init flatpickr
+            setTimeout(function() {
+                var elBatDau = document.getElementById('ngayBatDau');
+                var elKetThuc = document.getElementById('ngayKetThuc');
+                var fpBatDau = elBatDau._flatpickr;
+                var fpKetThuc = elKetThuc._flatpickr;
+
+                // --- Auto-fill ngày bắt đầu = hôm nay ---
+                if (!elBatDau.value) {
+                    var today = formatDateYmd(new Date());
+                    var endDate = addMonths(today, 6);
+
+                    if (fpBatDau) {
+                        fpBatDau.setDate(today, false);
+                    } else {
+                        elBatDau.value = today;
+                    }
+
+                    if (fpKetThuc) {
+                        fpKetThuc.set('minDate', endDate);
+                        fpKetThuc.setDate(endDate, false);
+                    } else {
+                        elKetThuc.value = endDate;
+                        elKetThuc.min = endDate;
+                    }
+                }
+
+                // --- Hook onChange cho ngày bắt đầu ---
+                if (fpBatDau) {
+                    fpBatDau.config.onChange.push(function(selectedDates, dateStr) {
+                        if (dateStr) {
+                            var newEnd = addMonths(dateStr, 6);
+                            if (fpKetThuc) {
+                                fpKetThuc.set('minDate', newEnd);
+                                fpKetThuc.setDate(newEnd, false);
+                            } else {
+                                elKetThuc.value = newEnd;
+                                elKetThuc.min = newEnd;
+                            }
+                            validateNgayKetThuc();
+                        }
+                    });
+                }
+
+                // --- Hook onChange cho ngày kết thúc ---
+                if (fpKetThuc) {
+                    fpKetThuc.config.onChange.push(function() {
+                        validateNgayKetThuc();
+                    });
+                }
+
+                // --- Validate trước khi submit ---
+                document.querySelector('form').addEventListener('submit', function(e) {
+                    if (!validateNgayKetThuc()) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }, 200);
+        </script>
 
     </div>
 </div>

@@ -66,7 +66,39 @@
                             </tr>
                             <tr>
                                 <th class="text-muted">Giá thuê:</th>
-                                <td th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                <td>
+                                    <!-- Giá gốc hợp đồng (chỉ gạch ngang khi giá hiện tại KHÁC giá gốc) -->
+                                    <span th:if="${giaThueInfo != null && giaThueInfo['coLichSuGia'] && giaThueInfo['giaHienTai'].compareTo(giaThueInfo['giaGoc']) != 0}">
+                                        <span class="text-muted text-decoration-line-through small me-1"
+                                              th:text="${#numbers.formatDecimal(giaThueInfo['giaGoc'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                        <i class="bi bi-arrow-right text-muted small me-1"></i>
+                                    </span>
+
+                                    <!-- Giá đang áp dụng hiện tại -->
+                                    <span class="fw-bold text-primary"
+                                          th:if="${giaThueInfo != null}"
+                                          th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                    <span class="fw-bold"
+                                          th:if="${giaThueInfo == null}"
+                                          th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+
+                                    <!-- Nếu có giá sắp tới (phụ lục đã duyệt nhưng chưa đến tháng áp dụng) -->
+                                    <div th:if="${giaThueInfo != null && giaThueInfo['giaSapToi'] != null}" class="mt-1">
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-clock-history me-1"></i>Từ tháng
+                                            <span th:text="${giaThueInfo['thangApDungGiaMoi']}"></span>:
+                                            <span th:text="${#numbers.formatDecimal(giaThueInfo['giaSapToi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                        </span>
+                                    </div>
+
+                                    <!-- Nếu có phụ lục đang chờ duyệt -->
+                                    <div th:if="${giaThueInfo != null && giaThueInfo['pendingGiaMoi'] != null}" class="mt-1">
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-hourglass-split me-1"></i>Chờ duyệt:
+                                            <span th:text="${#numbers.formatDecimal(giaThueInfo['pendingGiaMoi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                        </span>
+                                    </div>
+                                </td>
                             </tr>
                             <tr>
                                 <th class="text-muted">Tiền cọc:</th>
@@ -90,6 +122,56 @@
                         <p th:text="${hopDong.ghiChu}"></p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Addendum History -->
+        <div class="card mb-4" th:if="${phuLucList != null && !phuLucList.isEmpty()}">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-plus me-2"></i>Lịch sử phụ lục hợp đồng</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Giá thuê mới</th>
+                            <th>Ngày KT mới</th>
+                            <th>Ngày hiệu lực</th>
+                            <th>Trạng thái</th>
+                            <th>Ghi chú</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pl, stat : ${phuLucList}">
+                            <td th:text="${stat.index + 1}"></td>
+                            <td class="fw-bold text-primary"
+                                th:text="${#numbers.formatDecimal(pl.giaThueMMoi, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td th:text="${#temporals.format(pl.ngayKetThucMoi, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span th:if="${pl.ngayHieuLuc != null}" th:text="${#temporals.format(pl.ngayHieuLuc, 'dd/MM/yyyy')}"></span>
+                                <span th:if="${pl.ngayHieuLuc == null}" class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <span th:if="${pl.trangThai.name() == 'CHO_PHE_DUYET'}" class="badge bg-warning text-dark">
+                                    <i class="bi bi-clock me-1"></i>Chờ khách duyệt
+                                </span>
+                                <span th:if="${pl.trangThai.name() == 'DA_PHE_DUYET'}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Đã duyệt
+                                </span>
+                                <span th:if="${pl.trangThai.name() == 'DA_TU_CHOI'}" class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Từ chối
+                                </span>
+                            </td>
+                            <td>
+                                <span th:if="${pl.ghiChu != null}" th:text="${#strings.abbreviate(pl.ghiChu, 50)}"></span>
+                                <span th:if="${pl.ghiChu == null}" class="text-muted">-</span>
+                            </td>
+                            <td th:text="${#temporals.format(pl.ngayTao, 'dd/MM/yyyy HH:mm')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

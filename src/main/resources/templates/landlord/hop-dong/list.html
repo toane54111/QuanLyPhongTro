@@ -75,7 +75,38 @@
                             <td th:text="${hd.khachThue.hoTen}"></td>
                             <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}"></td>
                             <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}"></td>
-                            <td th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <th:block th:with="info=${giaThueMap != null ? giaThueMap[hd.hopDongId] : null}">
+                                    <!-- Giá hiện tại -->
+                                    <span th:if="${info != null}"
+                                          th:text="${#numbers.formatDecimal(info['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                                          th:classappend="${info['coLichSuGia'] && info['giaHienTai'].compareTo(info['giaGoc']) != 0 ? 'fw-bold text-primary' : ''}"></span>
+                                    <span th:if="${info == null}"
+                                          th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                    <!-- Indicator nếu có thay đổi giá -->
+                                    <span th:if="${info != null && info['coLichSuGia']}"
+                                          class="ms-1" title="Giá đã thay đổi so với hợp đồng gốc">
+                                        <i class="bi bi-arrow-up-circle-fill text-danger small"
+                                           th:if="${info['giaHienTai'].compareTo(info['giaGoc']) > 0}"></i>
+                                        <i class="bi bi-arrow-down-circle-fill text-success small"
+                                           th:if="${info['giaHienTai'].compareTo(info['giaGoc']) < 0}"></i>
+                                    </span>
+                                    <!-- Badge nếu có giá sắp tới -->
+                                    <br th:if="${info != null && info['giaSapToi'] != null}"/>
+                                    <small th:if="${info != null && info['giaSapToi'] != null}" class="text-info">
+                                        <i class="bi bi-clock"></i>
+                                        T<span th:text="${info['thangApDungGiaMoi']}"></span>:
+                                        <span th:text="${#numbers.formatDecimal(info['giaSapToi'], 0, 'COMMA', 0, 'POINT')}"></span>
+                                    </small>
+                                    <!-- Badge nếu đang chờ duyệt -->
+                                    <br th:if="${info != null && info['pendingGiaMoi'] != null}"/>
+                                    <small th:if="${info != null && info['pendingGiaMoi'] != null}" class="text-warning">
+                                        <i class="bi bi-hourglass-split"></i>
+                                        Chờ:
+                                        <span th:text="${#numbers.formatDecimal(info['pendingGiaMoi'], 0, 'COMMA', 0, 'POINT')}"></span>
+                                    </small>
+                                </th:block>
+                            </td>
                             <td>
                                 <span th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
                                 <span th:if="${hd.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>

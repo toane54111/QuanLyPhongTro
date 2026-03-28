@@ -37,15 +37,14 @@
                                 <option value="">-- Chọn phòng --</option>
                                 <option th:each="phong : ${danhSachPhongTro}"
                                         th:value="${phong.phongId}"
-                                        th:text="${phong.soPhong + ' - ' + phong.khuTro.tenKhu}"
+                                        th:text="'Phòng ' + ${phong.soPhong} + ' (Tầng ' + ${phong.tang} + ') - ' + ${phong.khuTro.tenKhu}"
                                         th:selected="${chiSoDienNuoc.phongTro != null && chiSoDienNuoc.phongTro.phongId == phong.phongId}">
                                 </option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Kỳ ghi <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" th:field="*{kyGhi}"
-                                   placeholder="YYYY-MM" required>
+                            <input type="month" class="form-control" th:field="*{kyGhi}" required>
                         </div>
                     </div>
 

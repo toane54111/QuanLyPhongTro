@@ -10,8 +10,10 @@ import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
 import com.nhatro.quanlynhatro.repository.ChiSoDienNuocRepository;
 import com.nhatro.quanlynhatro.repository.DichVuRepository;
 import com.nhatro.quanlynhatro.repository.GiaoDichRepository;
+import com.nhatro.quanlynhatro.entity.PhuLucHopDong;
 import com.nhatro.quanlynhatro.repository.HoaDonRepository;
 import com.nhatro.quanlynhatro.repository.HopDongRepository;
+import com.nhatro.quanlynhatro.repository.PhuLucHopDongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +37,7 @@ public class HoaDonService {
     private final ChiSoDienNuocRepository chiSoDienNuocRepository;
     private final DichVuRepository dichVuRepository;
     private final GiaoDichRepository giaoDichRepository;
+    private final PhuLucHopDongRepository phuLucHopDongRepository;
 
     public List<HoaDon> findAll() {
         return hoaDonRepository.findAll();
@@ -94,7 +98,10 @@ public class HoaDonService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng với ID: " + hopDongId));
 
         Long phongId = hopDong.getPhongTro().getPhongId();
-        BigDecimal tienPhong = hopDong.getGiaThue();
+
+        // Tính giá thuê hiệu lực: kiểm tra phụ lục hợp đồng đã duyệt
+        BigDecimal tienPhong = getGiaThueHieuLuc(hopDong, kyThanhToan);
+
         BigDecimal tienDien = BigDecimal.ZERO;
         BigDecimal tienNuoc = BigDecimal.ZERO;
 
@@ -198,7 +205,7 @@ public class HoaDonService {
             }
 
             Long phongId = hopDong.getPhongTro().getPhongId();
-            BigDecimal tienPhong = hopDong.getGiaThue();
+            BigDecimal tienPhong = getGiaThueHieuLuc(hopDong, kyThanhToan);
             BigDecimal tienDien = BigDecimal.ZERO;
             BigDecimal tienNuoc = BigDecimal.ZERO;
             boolean coChiSo = false;
@@ -265,5 +272,30 @@ public class HoaDonService {
             }
         }
         return count;
+    }
+
+    /**
+     * Lấy giá thuê hiệu lực cho một kỳ thanh toán dựa trên phụ lục hợp đồng.
+     * Nếu có phụ lục đã duyệt với ngayHieuLuc trong hoặc trước kỳ thanh toán → dùng giá mới.
+     * Ngược lại → dùng giá gốc hợp đồng.
+     * Đảm bảo giá mới chỉ áp dụng từ tháng phụ lục có hiệu lực trở đi.
+     */
+    private BigDecimal getGiaThueHieuLuc(HopDong hopDong, String kyThanhToan) {
+        YearMonth kyTT = YearMonth.parse(kyThanhToan);
+
+        List<PhuLucHopDong> approvedList = phuLucHopDongRepository
+                .findApprovedByHopDongOrderByNgayHieuLucDesc(hopDong.getHopDongId());
+
+        for (PhuLucHopDong phuLuc : approvedList) {
+            if (phuLuc.getNgayHieuLuc() != null) {
+                YearMonth thangHieuLuc = YearMonth.from(phuLuc.getNgayHieuLuc());
+                // Kỳ thanh toán >= tháng phụ lục có hiệu lực → áp dụng giá mới
+                if (!kyTT.isBefore(thangHieuLuc)) {
+                    return phuLuc.getGiaThueMMoi();
+                }
+            }
+        }
+
+        return hopDong.getGiaThue();
     }
 }

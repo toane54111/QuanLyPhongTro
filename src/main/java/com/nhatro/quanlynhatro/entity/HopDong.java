@@ -52,4 +52,7 @@ public class HopDong {
 
     @OneToMany(mappedBy = "hopDong")
     private List<YeuCauChamDut> yeuCauChamDuts;
+
+    @OneToMany(mappedBy = "hopDong")
+    private List<PhuLucHopDong> phuLucHopDongs;
 }

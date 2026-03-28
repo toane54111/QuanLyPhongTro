@@ -2,11 +2,13 @@ package com.nhatro.quanlynhatro.controller;
 
 import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.entity.NguoiDung;
+import com.nhatro.quanlynhatro.entity.PhuLucHopDong;
 import com.nhatro.quanlynhatro.entity.YeuCauChamDut;
 import com.nhatro.quanlynhatro.entity.YeuCauGiaHan;
 import com.nhatro.quanlynhatro.enums.TrangThaiYeuCau;
 import com.nhatro.quanlynhatro.service.HopDongService;
 import com.nhatro.quanlynhatro.service.NguoiDungService;
+import com.nhatro.quanlynhatro.service.PhuLucHopDongService;
 import com.nhatro.quanlynhatro.service.YeuCauChamDutService;
 import com.nhatro.quanlynhatro.service.YeuCauGiaHanService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/tenant/hop-dong")
@@ -30,6 +34,7 @@ public class TenantHopDongController {
     private final HopDongService hopDongService;
     private final YeuCauGiaHanService yeuCauGiaHanService;
     private final YeuCauChamDutService yeuCauChamDutService;
+    private final PhuLucHopDongService phuLucHopDongService;
 
     private NguoiDung getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -44,6 +49,14 @@ public class TenantHopDongController {
             List<HopDong> hopDongs = hopDongService.findByKhachThueId(currentUser.getUserId());
             model.addAttribute("hopDongs", hopDongs);
             model.addAttribute("nguoiDung", currentUser);
+
+            // Map hopDongId → thông tin giá hiện tại
+            Map<Long, Map<String, Object>> giaThueMap = new HashMap<>();
+            for (HopDong hd : hopDongs) {
+                giaThueMap.put(hd.getHopDongId(), phuLucHopDongService.getThongTinGiaThue(hd.getHopDongId()));
+            }
+            model.addAttribute("giaThueMap", giaThueMap);
+
             return "tenant/hop-dong/list";
         } catch (Exception e) {
             return "redirect:/login";
@@ -65,6 +78,16 @@ public class TenantHopDongController {
 
             model.addAttribute("hopDong", hopDong);
             model.addAttribute("nguoiDung", currentUser);
+
+            // Thông tin giá thuê hiện tại (có tính phụ lục)
+            model.addAttribute("giaThueInfo", phuLucHopDongService.getThongTinGiaThue(hopDong.getHopDongId()));
+
+            // Kiểm tra phụ lục đang chờ duyệt
+            phuLucHopDongService.findByHopDongId(hopDong.getHopDongId()).stream()
+                    .filter(pl -> pl.getTrangThai() == TrangThaiYeuCau.CHO_PHE_DUYET)
+                    .findFirst()
+                    .ifPresent(pl -> model.addAttribute("pendingPhuLuc", pl));
+
             return "tenant/hop-dong/detail";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -177,6 +200,78 @@ public class TenantHopDongController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Gửi yêu cầu thất bại: " + e.getMessage());
             return "redirect:/tenant/hop-dong/yeu-cau-cham-dut/" + hopDongId;
+        }
+    }
+
+    // ==================== Phụ lục hợp đồng (gia hạn kèm giá mới) ====================
+
+    @GetMapping("/phu-luc/{phuLucId}")
+    public String showPhuLuc(@PathVariable Long phuLucId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung currentUser = getCurrentUser();
+            PhuLucHopDong phuLuc = phuLucHopDongService.findById(phuLucId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ lục hợp đồng"));
+
+            HopDong hopDong = phuLuc.getHopDong();
+            // Kiểm tra quyền: phụ lục phải thuộc hợp đồng của khách này
+            if (!hopDong.getKhachThue().getUserId().equals(currentUser.getUserId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xem phụ lục này");
+                return "redirect:/tenant/hop-dong";
+            }
+
+            model.addAttribute("phuLuc", phuLuc);
+            model.addAttribute("hopDong", hopDong);
+            model.addAttribute("nguoiDung", currentUser);
+            return "tenant/hop-dong/phu-luc-detail";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/tenant/hop-dong";
+        }
+    }
+
+    @PostMapping("/phu-luc/approve/{phuLucId}")
+    public String approvePhuLuc(@PathVariable Long phuLucId, RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung currentUser = getCurrentUser();
+            PhuLucHopDong phuLuc = phuLucHopDongService.findById(phuLucId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ lục hợp đồng"));
+
+            if (!phuLuc.getHopDong().getKhachThue().getUserId().equals(currentUser.getUserId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thực hiện thao tác này");
+                return "redirect:/tenant/hop-dong";
+            }
+
+            phuLucHopDongService.approve(phuLucId);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Bạn đã đồng ý gia hạn hợp đồng với giá mới. Hợp đồng đã được cập nhật!");
+            return "redirect:/tenant/hop-dong/detail/" + phuLuc.getHopDong().getHopDongId();
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/tenant/hop-dong";
+        }
+    }
+
+    @PostMapping("/phu-luc/reject/{phuLucId}")
+    public String rejectPhuLuc(@PathVariable Long phuLucId,
+                                @RequestParam(required = false) String lyDo,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung currentUser = getCurrentUser();
+            PhuLucHopDong phuLuc = phuLucHopDongService.findById(phuLucId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ lục hợp đồng"));
+
+            if (!phuLuc.getHopDong().getKhachThue().getUserId().equals(currentUser.getUserId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thực hiện thao tác này");
+                return "redirect:/tenant/hop-dong";
+            }
+
+            phuLucHopDongService.reject(phuLucId, lyDo);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Bạn đã từ chối đề nghị gia hạn. Hợp đồng hiện tại vẫn giữ nguyên.");
+            return "redirect:/tenant/hop-dong/detail/" + phuLuc.getHopDong().getHopDongId();
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/tenant/hop-dong";
         }
     }
 }

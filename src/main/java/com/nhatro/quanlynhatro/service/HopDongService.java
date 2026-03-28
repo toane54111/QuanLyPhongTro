@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +78,17 @@ public class HopDongService {
 
         if (hopDongRepository.existsByKhachThue_UserIdAndTrangThai(khachThueId, TrangThaiHopDong.DANG_HIEU_LUC)) {
             throw new RuntimeException("Khách thuê đã có hợp đồng đang hiệu lực");
+        }
+
+        // Luôn lấy giá thuê từ PhongTro (không cho chủ tự nhập)
+        hopDong.setGiaThue(phongTro.getGiaThue());
+
+        // Validate thời hạn hợp đồng tối thiểu 6 tháng
+        if (hopDong.getNgayBatDau() != null && hopDong.getNgayKetThuc() != null) {
+            LocalDate minEndDate = hopDong.getNgayBatDau().plusMonths(6);
+            if (hopDong.getNgayKetThuc().isBefore(minEndDate)) {
+                throw new RuntimeException("Thời hạn hợp đồng phải ít nhất 6 tháng. Ngày kết thúc tối thiểu: " + minEndDate);
+            }
         }
 
         hopDong.setPhongTro(phongTro);

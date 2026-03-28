@@ -47,7 +47,28 @@
                             </td>
                             <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}"></td>
                             <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}"></td>
-                            <td th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            <td>
+                                <th:block th:with="info=${giaThueMap != null ? giaThueMap[hd.hopDongId] : null}">
+                                    <span th:if="${info != null}"
+                                          th:text="${#numbers.formatDecimal(info['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                                          th:classappend="${info['coLichSuGia'] && info['giaHienTai'].compareTo(info['giaGoc']) != 0 ? 'fw-bold text-primary' : ''}"></span>
+                                    <span th:if="${info == null}"
+                                          th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                    <span th:if="${info != null && info['coLichSuGia']}" class="ms-1"
+                                          title="Giá đã thay đổi so với hợp đồng gốc">
+                                        <i class="bi bi-arrow-up-circle-fill text-danger small"
+                                           th:if="${info['giaHienTai'].compareTo(info['giaGoc']) > 0}"></i>
+                                        <i class="bi bi-arrow-down-circle-fill text-success small"
+                                           th:if="${info['giaHienTai'].compareTo(info['giaGoc']) < 0}"></i>
+                                    </span>
+                                    <br th:if="${info != null && info['giaSapToi'] != null}"/>
+                                    <small th:if="${info != null && info['giaSapToi'] != null}" class="text-info">
+                                        <i class="bi bi-clock"></i>
+                                        T<span th:text="${info['thangApDungGiaMoi']}"></span>:
+                                        <span th:text="${#numbers.formatDecimal(info['giaSapToi'], 0, 'COMMA', 0, 'POINT')}"></span>
+                                    </small>
+                                </th:block>
+                            </td>
                             <td th:text="${#numbers.formatDecimal(hd.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                             <td>
                                 <span th:if="${hd.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>

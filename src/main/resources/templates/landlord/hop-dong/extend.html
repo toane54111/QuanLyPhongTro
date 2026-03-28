@@ -30,7 +30,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <p class="mb-1 text-muted">Phòng</p>
                         <p class="fw-bold">
                             <span th:text="${hopDong.phongTro.soPhong}"></span>
@@ -38,11 +38,26 @@
                             <span th:text="${hopDong.phongTro.khuTro.tenKhu}"></span>
                         </p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <p class="mb-1 text-muted">Khách thuê</p>
                         <p class="fw-bold" th:text="${hopDong.khachThue.hoTen}"></p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <p class="mb-1 text-muted">Giá thuê hiện tại</p>
+                        <p class="fw-bold text-primary"
+                           th:if="${giaThueInfo != null}"
+                           th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></p>
+                        <p class="fw-bold text-primary"
+                           th:if="${giaThueInfo == null}"
+                           th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></p>
+                        <!-- Hiển thị giá gốc nếu khác -->
+                        <small th:if="${giaThueInfo != null && giaThueInfo['coLichSuGia']}" class="text-muted">
+                            Giá gốc HĐ:
+                            <span class="text-decoration-line-through"
+                                  th:text="${#numbers.formatDecimal(giaThueInfo['giaGoc'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        </small>
+                    </div>
+                    <div class="col-md-3">
                         <p class="mb-1 text-muted">Ngày kết thúc hiện tại</p>
                         <p class="fw-bold" th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></p>
                     </div>
@@ -50,33 +65,122 @@
             </div>
         </div>
 
-        <!-- Extend Form -->
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-calendar-range me-2"></i>Thông tin gia hạn</h5>
-            </div>
-            <div class="card-body">
-                <form th:action="@{/landlord/hop-dong/extend/{id}(id=${hopDong.hopDongId})}" method="post">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Ngày kết thúc mới <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="ngayKetThucMoi"
-                                   th:min="${hopDong.ngayKetThuc.plusDays(1)}" required>
-                            <div class="form-text">Ngày kết thúc mới phải sau ngày kết thúc hiện tại
-                                (<span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>).
-                            </div>
-                        </div>
-                    </div>
+        <!-- Warning if pending addendum -->
+        <div th:if="${hasPendingPhuLuc}" class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Lưu ý:</strong> Hợp đồng này đang có phụ lục gia hạn chờ khách duyệt.
+            Bạn không thể tạo thêm phụ lục cho đến khi khách phản hồi.
+        </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle me-1"></i>Gia hạn
-                        </button>
-                        <a th:href="@{/landlord/hop-dong}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-1"></i>Hủy
-                        </a>
+        <!-- Tabs: Gia hạn nhanh vs Phụ lục -->
+        <ul class="nav nav-tabs mb-0" id="extendTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="quick-tab" data-bs-toggle="tab" data-bs-target="#quick"
+                        type="button" role="tab">
+                    <i class="bi bi-lightning me-1"></i>Gia hạn nhanh (giá cũ)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="addendum-tab" data-bs-toggle="tab" data-bs-target="#addendum"
+                        type="button" role="tab">
+                    <i class="bi bi-file-earmark-plus me-1"></i>Gia hạn kèm phụ lục (giá mới)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Tab 1: Gia hạn nhanh -->
+            <div class="tab-pane fade show active" id="quick" role="tabpanel">
+                <div class="card border-top-0 rounded-top-0">
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Gia hạn nhanh sẽ <strong>giữ nguyên giá thuê</strong> hiện tại và cập nhật ngay.
+                            Hệ thống sẽ gửi thông báo cho khách. Nếu khách không đồng ý, khách có 15 ngày để phản hồi.
+                        </div>
+                        <form th:action="@{/landlord/hop-dong/extend/{id}(id=${hopDong.hopDongId})}" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày kết thúc mới <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" name="ngayKetThucMoi"
+                                           th:min="${hopDong.ngayKetThuc.plusDays(1)}" required>
+                                    <div class="form-text">Phải sau ngày
+                                        <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i>Gia hạn nhanh
+                                </button>
+                                <a th:href="@{/landlord/hop-dong/detail/{id}(id=${hopDong.hopDongId})}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                </a>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <!-- Tab 2: Gia hạn kèm phụ lục -->
+            <div class="tab-pane fade" id="addendum" role="tabpanel">
+                <div class="card border-top-0 rounded-top-0">
+                    <div class="card-body">
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            Phụ lục sẽ được gửi cho khách thuê duyệt. Hợp đồng chỉ cập nhật khi khách <strong>đồng ý</strong>.
+                            Giá mới sẽ áp dụng từ tháng khách duyệt trở đi (không hồi tố).
+                        </div>
+                        <form th:action="@{/landlord/hop-dong/extend-phu-luc/{id}(id=${hopDong.hopDongId})}" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Giá thuê mới <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="giaThueMoi"
+                                               th:value="${giaThueInfo != null ? giaThueInfo['giaHienTai'] : hopDong.giaThue}"
+                                               min="0" step="100000" required>
+                                        <span class="input-group-text">VND/tháng</span>
+                                    </div>
+                                    <div class="form-text">
+                                        Giá đang áp dụng: <strong
+                                            th:if="${giaThueInfo != null}"
+                                            th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></strong>
+                                        <strong th:if="${giaThueInfo == null}"
+                                                th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></strong>
+                                        <span th:if="${giaThueInfo != null && giaThueInfo['coLichSuGia']}" class="text-muted">
+                                            (gốc: <span class="text-decoration-line-through"
+                                                         th:text="${#numbers.formatDecimal(giaThueInfo['giaGoc'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày kết thúc mới <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" name="ngayKetThucMoi"
+                                           th:min="${hopDong.ngayKetThuc.plusDays(1)}" required>
+                                    <div class="form-text">Phải sau ngày
+                                        <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Ghi chú (tùy chọn)</label>
+                                    <textarea class="form-control" name="ghiChu" rows="3"
+                                              placeholder="Lý do tăng giá, điều khoản bổ sung..."></textarea>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary"
+                                        th:disabled="${hasPendingPhuLuc}">
+                                    <i class="bi bi-send me-1"></i>Gửi phụ lục cho khách duyệt
+                                </button>
+                                <a th:href="@{/landlord/hop-dong/detail/{id}(id=${hopDong.hopDongId})}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 

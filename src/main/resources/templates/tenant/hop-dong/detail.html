@@ -45,7 +45,37 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Giá thuê:</strong>
-                        <span th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+
+                        <!-- Giá gốc (chỉ gạch ngang khi giá hiện tại KHÁC giá gốc) -->
+                        <span th:if="${giaThueInfo != null && giaThueInfo['coLichSuGia'] && giaThueInfo['giaHienTai'].compareTo(giaThueInfo['giaGoc']) != 0}">
+                            <span class="text-muted text-decoration-line-through small me-1"
+                                  th:text="${#numbers.formatDecimal(giaThueInfo['giaGoc'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                            <i class="bi bi-arrow-right text-muted small me-1"></i>
+                        </span>
+
+                        <!-- Giá đang áp dụng hiện tại -->
+                        <span class="fw-bold text-primary"
+                              th:if="${giaThueInfo != null}"
+                              th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        <span th:if="${giaThueInfo == null}"
+                              th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+
+                        <!-- Giá sắp tới (phụ lục đã duyệt nhưng chưa đến tháng áp dụng) -->
+                        <div th:if="${giaThueInfo != null && giaThueInfo['giaSapToi'] != null}" class="mt-1">
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-clock-history me-1"></i>Từ tháng
+                                <span th:text="${giaThueInfo['thangApDungGiaMoi']}"></span>:
+                                <span th:text="${#numbers.formatDecimal(giaThueInfo['giaSapToi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                            </span>
+                        </div>
+
+                        <!-- Phụ lục đang chờ duyệt -->
+                        <div th:if="${giaThueInfo != null && giaThueInfo['pendingGiaMoi'] != null}" class="mt-1">
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-hourglass-split me-1"></i>Chờ duyệt:
+                                <span th:text="${#numbers.formatDecimal(giaThueInfo['pendingGiaMoi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                            </span>
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Tiền cọc:</strong>
@@ -60,6 +90,34 @@
                     <div class="col-md-6 mb-3" th:if="${hopDong.ghiChu != null and !hopDong.ghiChu.isEmpty()}">
                         <strong>Ghi chú:</strong>
                         <span th:text="${hopDong.ghiChu}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Addendum Alert -->
+        <div th:if="${pendingPhuLuc != null}" class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Phụ lục gia hạn chờ phản hồi
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-md-4">
+                        <strong>Giá thuê mới:</strong>
+                        <span class="text-danger fw-bold"
+                              th:text="${#numbers.formatDecimal(pendingPhuLuc.giaThueMMoi, 0, 'COMMA', 0, 'POINT')} + ' VND/tháng'"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Ngày KT mới:</strong>
+                        <span th:text="${#temporals.format(pendingPhuLuc.ngayKetThucMoi, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <a th:href="@{/tenant/hop-dong/phu-luc/{id}(id=${pendingPhuLuc.phuLucId})}"
+                           class="btn btn-warning btn-sm">
+                            <i class="bi bi-eye me-1"></i>Xem chi tiết & phản hồi
+                        </a>
                     </div>
                 </div>
             </div>
