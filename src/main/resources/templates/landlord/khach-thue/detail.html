@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Chi tiết Khách thuê</title></head>
+<body>
+<div th:replace="~{layout/main :: layout(title='Chi tiết Khách thuê', content=~{::mainContent})}">
+    <div th:fragment="mainContent">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- === HEADER: Tên khách, Phòng, Trạng thái === -->
+        <div class="card mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span th:text="${khachThue.hoTen}"></span>
+                    </h3>
+                    <div class="d-flex gap-3 align-items-center">
+                        <span th:if="${hopDongHienTai != null}" class="text-muted">
+                            <i class="bi bi-door-open me-1"></i>Phòng
+                            <strong th:text="${hopDongHienTai.phongTro.soPhong}"></strong>
+                            -
+                            <span th:text="${hopDongHienTai.phongTro.khuTro.tenKhu}"></span>
+                        </span>
+                        <span th:if="${hopDongHienTai == null}" class="text-muted">
+                            <i class="bi bi-door-open me-1"></i>Chưa có phòng
+                        </span>
+                        <span class="badge"
+                              th:classappend="${khachThue.trangThai.name() == 'HOAT_DONG' ? 'bg-success' : 'bg-danger'}"
+                              th:text="${khachThue.trangThai.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}">
+                        </span>
+                    </div>
+                </div>
+                <a th:href="@{/landlord/khach-thue}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- === CỘT TRÁI: Thông tin cá nhân (editable) === -->
+            <div class="col-lg-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Thông tin cá nhân</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/landlord/khach-thue/edit/{id}(id=${khachThue.userId})}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Họ tên</label>
+                                <input type="text" class="form-control" name="hoTen"
+                                       th:value="${khachThue.hoTen}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Email</label>
+                                <input type="email" class="form-control" th:value="${khachThue.email}" disabled>
+                                <small class="form-text text-muted">Email không thể thay đổi</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Số điện thoại</label>
+                                <input type="text" class="form-control" name="sdt"
+                                       th:value="${khachThue.sdt}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">CCCD</label>
+                                <input type="text" class="form-control" name="cccd"
+                                       th:value="${khachThue.cccd}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Ngày tạo tài khoản</label>
+                                <input type="text" class="form-control"
+                                       th:value="${#temporals.format(khachThue.ngayTao, 'dd/MM/yyyy HH:mm')}" disabled>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>Lưu thay đổi
+                                </button>
+                                <form th:action="@{/landlord/khach-thue/toggle-status/{id}(id=${khachThue.userId})}"
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn"
+                                            th:classappend="${khachThue.trangThai.name() == 'HOAT_DONG' ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                            th:text="${khachThue.trangThai.name() == 'HOAT_DONG' ? 'Khóa tài khoản' : 'Mở khóa'}">
+                                    </button>
+                                </form>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === CỘT PHẢI: Hợp đồng hiện tại === -->
+            <div class="col-lg-7 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Hợp đồng hiện tại</h5>
+                    </div>
+                    <div class="card-body" th:if="${hopDongHienTai != null}">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Phòng</small>
+                                    <strong class="fs-5" th:text="${hopDongHienTai.phongTro.soPhong}"></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Giá thuê</small>
+                                    <strong class="fs-5 text-primary"
+                                            th:text="${#numbers.formatDecimal(hopDongHienTai.giaThue, 0, 'COMMA', 0, 'POINT')} + ' đ'"></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Ngày bắt đầu</small>
+                                    <strong th:text="${#temporals.format(hopDongHienTai.ngayBatDau, 'dd/MM/yyyy')}"></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Ngày kết thúc</small>
+                                    <strong th:text="${#temporals.format(hopDongHienTai.ngayKetThuc, 'dd/MM/yyyy')}"></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Tiền cọc</small>
+                                    <strong th:text="${#numbers.formatDecimal(hopDongHienTai.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' đ'"></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3 text-center">
+                                    <small class="text-muted d-block">Trạng thái</small>
+                                    <span class="badge bg-success">Đang hiệu lực</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3" th:if="${hopDongHienTai.ghiChu != null && !hopDongHienTai.ghiChu.isEmpty()}">
+                            <small class="text-muted">Ghi chú:</small>
+                            <p class="mb-0" th:text="${hopDongHienTai.ghiChu}"></p>
+                        </div>
+                    </div>
+                    <div class="card-body text-center py-5" th:if="${hopDongHienTai == null}">
+                        <i class="bi bi-file-earmark-x text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">Khách thuê chưa có hợp đồng đang hiệu lực.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === LỊCH SỬ HÓA ĐƠN & THANH TOÁN === -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Lịch sử hóa đơn</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" th:if="${!danhSachHoaDon.isEmpty()}">
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Kỳ</th>
+                            <th>Phòng</th>
+                            <th class="text-end">Tiền phòng</th>
+                            <th class="text-end">Điện</th>
+                            <th class="text-end">Nước</th>
+                            <th class="text-end">DV</th>
+                            <th class="text-end">Tổng</th>
+                            <th>Trạng thái</th>
+                            <th>Hạn TT</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd : ${danhSachHoaDon}">
+                            <td th:text="${hd.kyThanhToan}"></td>
+                            <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(hd.phiDichVu, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${hd.trangThai.name() == 'DA_THANH_TOAN' ? 'bg-success' :
+                                          (hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN' ? 'bg-warning text-dark' : 'bg-danger')}"
+                                      th:text="${hd.trangThai.name() == 'DA_THANH_TOAN' ? 'Đã TT' :
+                                          (hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN' ? 'Một phần' : 'Chưa TT')}">
+                                </span>
+                            </td>
+                            <td th:text="${hd.hanThanhToan != null ? #temporals.format(hd.hanThanhToan, 'dd/MM/yyyy') : ''}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${danhSachHoaDon.isEmpty()}" class="text-center py-3 text-muted">
+                    Chưa có hóa đơn nào.
+                </div>
+            </div>
+        </div>
+
+        <!-- === CHỈ SỐ ĐIỆN NƯỚC === -->
+        <div class="card mb-4" th:if="${hopDongHienTai != null}">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>Chỉ số điện nước - Phòng
+                    <span th:text="${hopDongHienTai.phongTro.soPhong}"></span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" th:if="${!danhSachChiSo.isEmpty()}">
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Kỳ ghi</th>
+                            <th class="text-end">Điện cũ</th>
+                            <th class="text-end">Điện mới</th>
+                            <th class="text-end">Tiêu thụ (kWh)</th>
+                            <th class="text-end">Nước cũ</th>
+                            <th class="text-end">Nước mới</th>
+                            <th class="text-end">Tiêu thụ (m³)</th>
+                            <th>Ngày ghi</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cs : ${danhSachChiSo}">
+                            <td th:text="${cs.kyGhi}"></td>
+                            <td class="text-end" th:text="${cs.dienCu}"></td>
+                            <td class="text-end" th:text="${cs.dienMoi}"></td>
+                            <td class="text-end fw-bold text-warning" th:text="${cs.dienTieuThu}"></td>
+                            <td class="text-end" th:text="${cs.nuocCu}"></td>
+                            <td class="text-end" th:text="${cs.nuocMoi}"></td>
+                            <td class="text-end fw-bold text-info" th:text="${cs.nuocTieuThu}"></td>
+                            <td th:text="${cs.ngayGhi != null ? #temporals.format(cs.ngayGhi, 'dd/MM/yyyy') : ''}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${danhSachChiSo.isEmpty()}" class="text-center py-3 text-muted">
+                    Chưa có dữ liệu chỉ số điện nước.
+                </div>
+            </div>
+        </div>
+
+        <!-- === LỊCH SỬ HỢP ĐỒNG === -->
+        <div class="card mb-4" th:if="${danhSachHopDong.size() > 1}">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Lịch sử hợp đồng</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Phòng</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th class="text-end">Giá thuê</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hd : ${danhSachHopDong}">
+                            <td th:text="${hd.phongTro.soPhong}"></td>
+                            <td th:text="${#temporals.format(hd.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(hd.ngayKetThuc, 'dd/MM/yyyy')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(hd.giaThue, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${hd.trangThai.name() == 'DANG_HIEU_LUC' ? 'bg-success' :
+                                          (hd.trangThai.name() == 'DA_CHAM_DUT' ? 'bg-danger' : 'bg-secondary')}"
+                                      th:text="${hd.trangThai.name() == 'DANG_HIEU_LUC' ? 'Đang hiệu lực' :
+                                          (hd.trangThai.name() == 'DA_CHAM_DUT' ? 'Đã chấm dứt' : 'Hết hạn')}">
+                                </span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

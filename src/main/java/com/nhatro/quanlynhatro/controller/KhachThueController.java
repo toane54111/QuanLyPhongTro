@@ -1,6 +1,13 @@
 package com.nhatro.quanlynhatro.controller;
 
+import com.nhatro.quanlynhatro.entity.ChiSoDienNuoc;
+import com.nhatro.quanlynhatro.entity.HoaDon;
+import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.entity.NguoiDung;
+import com.nhatro.quanlynhatro.enums.TrangThaiHopDong;
+import com.nhatro.quanlynhatro.service.ChiSoDienNuocService;
+import com.nhatro.quanlynhatro.service.HoaDonService;
+import com.nhatro.quanlynhatro.service.HopDongService;
 import com.nhatro.quanlynhatro.service.KhachThueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -8,12 +15,18 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Collections;
+import java.util.List;
+
 @Controller
 @RequestMapping("/landlord/khach-thue")
 @RequiredArgsConstructor
 public class KhachThueController {
 
     private final KhachThueService khachThueService;
+    private final HopDongService hopDongService;
+    private final HoaDonService hoaDonService;
+    private final ChiSoDienNuocService chiSoDienNuocService;
 
     @GetMapping
     public String list(Model model) {
@@ -65,7 +78,43 @@ public class KhachThueController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật khách thuê: " + e.getMessage());
         }
-        return "redirect:/landlord/khach-thue";
+        return "redirect:/landlord/khach-thue/detail/" + id;
+    }
+
+    @GetMapping("/detail/{id}")
+    public String detail(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            NguoiDung khachThue = khachThueService.findById(id);
+            model.addAttribute("khachThue", khachThue);
+
+            // Hợp đồng hiện tại (đang hiệu lực)
+            List<HopDong> activeContracts = hopDongService.findByKhachThueIdAndTrangThai(
+                    id, TrangThaiHopDong.DANG_HIEU_LUC);
+            HopDong hopDongHienTai = activeContracts.isEmpty() ? null : activeContracts.get(0);
+            model.addAttribute("hopDongHienTai", hopDongHienTai);
+
+            // Tất cả hợp đồng
+            List<HopDong> allContracts = hopDongService.findByKhachThueId(id);
+            model.addAttribute("danhSachHopDong", allContracts);
+
+            // Lịch sử hóa đơn
+            List<HoaDon> hoaDons = hoaDonService.findByKhachThueId(id);
+            model.addAttribute("danhSachHoaDon", hoaDons);
+
+            // Chỉ số điện nước (theo phòng hiện tại)
+            if (hopDongHienTai != null) {
+                Long phongId = hopDongHienTai.getPhongTro().getPhongId();
+                List<ChiSoDienNuoc> chiSos = chiSoDienNuocService.findByPhongId(phongId);
+                model.addAttribute("danhSachChiSo", chiSos);
+            } else {
+                model.addAttribute("danhSachChiSo", Collections.emptyList());
+            }
+
+            return "landlord/khach-thue/detail";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy khách thuê: " + e.getMessage());
+            return "redirect:/landlord/khach-thue";
+        }
     }
 
     @PostMapping("/toggle-status/{id}")
