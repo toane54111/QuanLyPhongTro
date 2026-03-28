@@ -79,6 +79,10 @@ public class ChiSoDienNuocService {
         return chiSoDienNuocRepository.save(existing);
     }
 
+    public List<ChiSoDienNuoc> findByPhongId(Long phongId) {
+        return chiSoDienNuocRepository.findByPhongTro_PhongIdOrderByKyGhiDesc(phongId);
+    }
+
     public Optional<ChiSoDienNuoc> getLatestByPhongId(Long phongId) {
         return chiSoDienNuocRepository.findTopByPhongTro_PhongIdOrderByKyGhiDesc(phongId);
     }
