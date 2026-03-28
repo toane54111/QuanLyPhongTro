@@ -1,8 +1,10 @@
 package com.nhatro.quanlynhatro.controller;
 
+import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HoaDon;
 import com.nhatro.quanlynhatro.entity.NguoiDung;
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
+import com.nhatro.quanlynhatro.service.DichVuService;
 import com.nhatro.quanlynhatro.service.HoaDonService;
 import com.nhatro.quanlynhatro.service.NguoiDungService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
@@ -22,6 +27,7 @@ public class TenantHoaDonController {
 
     private final NguoiDungService nguoiDungService;
     private final HoaDonService hoaDonService;
+    private final DichVuService dichVuService;
 
     private NguoiDung getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -29,13 +35,62 @@ public class TenantHoaDonController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    /**
+     * Trang tổng quan thanh toán - dashboard hóa đơn khách thuê
+     */
     @GetMapping
     public String list(Model model) {
         try {
             NguoiDung currentUser = getCurrentUser();
-            List<HoaDon> hoaDons = hoaDonService.findByKhachThueId(currentUser.getUserId());
-            model.addAttribute("hoaDons", hoaDons);
+            Long userId = currentUser.getUserId();
+            String kyHienTai = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+            // Tất cả hóa đơn
+            List<HoaDon> allHoaDons = hoaDonService.findByKhachThueId(userId);
+
+            // Hóa đơn chưa thanh toán (ưu tiên hiển thị)
+            List<HoaDon> hoaDonChuaTT = hoaDonService.findUnpaidByKhachThueId2(userId);
+
+            // Hóa đơn đã thanh toán (lịch sử)
+            List<HoaDon> hoaDonDaTT = hoaDonService.findPaidByKhachThueId(userId);
+
+            // Hóa đơn tháng hiện tại
+            List<HoaDon> hoaDonThangNay = hoaDonService.findByKhachThueAndKyThanhToan(userId, kyHienTai);
+
+            // Thống kê tổng hợp
+            BigDecimal tongNo = hoaDonService.getTongNoByKhachThue(userId);
+            BigDecimal tongDaTT = hoaDonService.getTongDaThanhToanByKhachThue(userId);
+
+            // Tổng tiền hóa đơn tháng hiện tại
+            BigDecimal tongThangNay = hoaDonThangNay.stream()
+                    .map(HoaDon::getTongTien)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Số hóa đơn quá hạn
+            long soQuaHan = hoaDonChuaTT.stream()
+                    .filter(hd -> hd.getHanThanhToan() != null && hd.getHanThanhToan().isBefore(java.time.LocalDate.now()))
+                    .count();
+
+            // Lịch sử giao dịch gần đây (top 10)
+            List<GiaoDich> lichSuGD = hoaDonService.getLichSuGiaoDichByKhachThue(userId);
+            List<GiaoDich> lichSuGDGanDay = lichSuGD.size() > 10 ? lichSuGD.subList(0, 10) : lichSuGD;
+
+            // Danh sách dịch vụ (để hiển thị bảng giá)
+            model.addAttribute("danhSachDichVu", dichVuService.findAll());
+
             model.addAttribute("nguoiDung", currentUser);
+            model.addAttribute("hoaDons", allHoaDons);
+            model.addAttribute("hoaDonChuaTT", hoaDonChuaTT);
+            model.addAttribute("hoaDonDaTT", hoaDonDaTT);
+            model.addAttribute("hoaDonThangNay", hoaDonThangNay);
+            model.addAttribute("tongNo", tongNo);
+            model.addAttribute("tongDaTT", tongDaTT);
+            model.addAttribute("tongThangNay", tongThangNay);
+            model.addAttribute("soQuaHan", soQuaHan);
+            model.addAttribute("soHoaDonChuaTT", hoaDonChuaTT.size());
+            model.addAttribute("lichSuGD", lichSuGDGanDay);
+            model.addAttribute("kyHienTai", kyHienTai);
+
             return "tenant/hoa-don/list";
         } catch (Exception e) {
             return "redirect:/login";
@@ -54,8 +109,13 @@ public class TenantHoaDonController {
                 return "redirect:/tenant/hoa-don";
             }
 
+            // Lịch sử giao dịch của hóa đơn này
+            List<GiaoDich> giaoDichs = hoaDonService.findGiaoDichByHoaDonId(id);
+
             model.addAttribute("hoaDon", hoaDon);
+            model.addAttribute("giaoDichs", giaoDichs);
             model.addAttribute("nguoiDung", currentUser);
+            model.addAttribute("danhSachDichVu", dichVuService.findAll());
             return "tenant/hoa-don/detail";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

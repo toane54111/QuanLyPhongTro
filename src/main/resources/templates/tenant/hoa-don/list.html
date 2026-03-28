@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Hóa đơn của tôi</title></head>
+<head><title>Thanh toán & Hóa đơn</title></head>
 <body>
-<div th:replace="~{layout/main :: layout(title='Hóa đơn của tôi', content=~{::mainContent})}">
+<div th:replace="~{layout/main :: layout(title='Thanh toán & Hóa đơn', content=~{::mainContent})}">
     <div th:fragment="mainContent">
 
         <!-- Flash messages -->
@@ -14,61 +14,389 @@
             <span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-receipt me-2"></i>Hóa đơn của tôi</h2>
+            <h2><i class="bi bi-wallet2 me-2"></i>Thanh toán & Hóa đơn</h2>
+            <span class="badge bg-secondary fs-6" th:text="'Kỳ hiện tại: ' + ${kyHienTai}"></span>
         </div>
 
-        <!-- Table -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle" th:if="${!hoaDons.isEmpty()}">
-                        <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Phòng</th>
-                            <th>Kỳ thanh toán</th>
-                            <th>Tổng tiền</th>
-                            <th>Đã thanh toán</th>
-                            <th>Còn nợ</th>
-                            <th>Trạng thái</th>
-                            <th>Hạn TT</th>
-                            <th>Thao tác</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="hd, iter : ${hoaDons}">
-                            <td th:text="${iter.count}"></td>
-                            <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
-                            <td th:text="${hd.kyThanhToan}"></td>
-                            <td th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
-                            <td th:text="${#numbers.formatDecimal(hd.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
-                            <td>
-                                <span th:class="${hd.conNo > 0 ? 'text-danger fw-bold' : ''}"
-                                      th:text="${#numbers.formatDecimal(hd.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                            </td>
-                            <td>
-                                <span th:if="${hd.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa thanh toán</span>
-                                <span th:if="${hd.trangThai.name() == 'DA_THANH_TOAN'}" class="badge bg-success">Đã thanh toán</span>
-                                <span th:if="${hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">Thanh toán một phần</span>
-                            </td>
-                            <td th:text="${#temporals.format(hd.hanThanhToan, 'dd/MM/yyyy')}"></td>
-                            <td>
+        <!-- ==================== THỐNG KÊ TỔNG QUAN ==================== -->
+        <div class="row mb-4">
+            <!-- Tổng nợ -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                                    <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="text-muted mb-1 small">Tổng còn nợ</p>
+                                <h4 class="mb-0 text-danger" th:text="${#numbers.formatDecimal(tongNo, 0, 'COMMA', 0, 'POINT')} + 'đ'"></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Hóa đơn tháng này -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="bi bi-calendar-month text-primary fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="text-muted mb-1 small">Tháng này</p>
+                                <h4 class="mb-0 text-primary" th:text="${#numbers.formatDecimal(tongThangNay, 0, 'COMMA', 0, 'POINT')} + 'đ'"></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Đã thanh toán -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="bi bi-check-circle text-success fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="text-muted mb-1 small">Tổng đã thanh toán</p>
+                                <h4 class="mb-0 text-success" th:text="${#numbers.formatDecimal(tongDaTT, 0, 'COMMA', 0, 'POINT')} + 'đ'"></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Số hóa đơn chưa TT -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="bi bi-receipt text-warning fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="text-muted mb-1 small">Hóa đơn chưa TT</p>
+                                <h4 class="mb-0">
+                                    <span th:text="${soHoaDonChuaTT}"></span>
+                                    <small th:if="${soQuaHan > 0}" class="text-danger fs-6"
+                                           th:text="'(' + ${soQuaHan} + ' quá hạn)'"></small>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- ==================== CỘT TRÁI: HÓA ĐƠN THÁNG NÀY + CHƯA TT ==================== -->
+            <div class="col-lg-8 mb-4">
+
+                <!-- Hóa đơn tháng hiện tại - Chi tiết -->
+                <div class="card mb-4" th:if="${!hoaDonThangNay.isEmpty()}">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-calendar-check me-2"></i>Chi tiết hóa đơn tháng
+                            <span th:text="${kyHienTai}"></span>
+                        </h6>
+                    </div>
+                    <div class="card-body" th:each="hd : ${hoaDonThangNay}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>
+                                <strong>Phòng <span th:text="${hd.hopDong.phongTro.soPhong}"></span></strong>
+                                <span class="text-muted" th:text="' - ' + ${hd.hopDong.phongTro.khuTro.tenKhu}"></span>
+                            </span>
+                            <span th:if="${hd.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa thanh toán</span>
+                            <span th:if="${hd.trangThai.name() == 'DA_THANH_TOAN'}" class="badge bg-success">Đã thanh toán</span>
+                            <span th:if="${hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">Thanh toán một phần</span>
+                        </div>
+
+                        <!-- Bảng chi tiết chi phí -->
+                        <table class="table table-sm mb-3">
+                            <tbody>
+                                <tr>
+                                    <td><i class="bi bi-house me-2 text-primary"></i>Tiền phòng</td>
+                                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-lightning me-2 text-warning"></i>Tiền điện</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-droplet me-2 text-info"></i>Tiền nước</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-gear me-2 text-secondary"></i>Phí dịch vụ khác</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(hd.phiDichVu, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <td class="fw-bold">Tổng cộng</td>
+                                    <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                                <tr th:if="${hd.daThanhToan > 0}">
+                                    <td class="text-success"><i class="bi bi-check2 me-1"></i>Đã thanh toán</td>
+                                    <td class="text-end text-success" th:text="${#numbers.formatDecimal(hd.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                                <tr th:if="${hd.conNo > 0}" class="table-danger">
+                                    <td class="fw-bold text-danger">Còn nợ</td>
+                                    <td class="text-end fw-bold text-danger" th:text="${#numbers.formatDecimal(hd.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Hạn thanh toán + nút -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>Hạn thanh toán:
+                                <strong th:text="${#temporals.format(hd.hanThanhToan, 'dd/MM/yyyy')}"></strong>
+                                <span th:if="${hd.hanThanhToan.isBefore(T(java.time.LocalDate).now()) && hd.conNo > 0}"
+                                      class="text-danger ms-1">(Quá hạn!)</span>
+                            </small>
+                            <div>
+                                <a th:if="${hd.conNo > 0}"
+                                   th:href="@{/tenant/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-credit-card me-1"></i>Thanh toán ngay
+                                </a>
                                 <a th:href="@{/tenant/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
-                                   class="btn btn-sm btn-outline-info">
+                                   class="btn btn-outline-info btn-sm">
                                     <i class="bi bi-eye me-1"></i>Chi tiết
                                 </a>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Empty state -->
-                    <div th:if="${hoaDons.isEmpty()}" class="text-center py-5">
-                        <i class="bi bi-receipt text-muted" style="font-size: 3rem;"></i>
-                        <p class="text-muted mt-3">Bạn chưa có hóa đơn nào.</p>
+                <!-- Không có hóa đơn tháng này -->
+                <div class="card mb-4" th:if="${hoaDonThangNay.isEmpty()}">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-calendar-check me-2"></i>Hóa đơn tháng
+                            <span th:text="${kyHienTai}"></span>
+                        </h6>
+                    </div>
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-check-circle text-success" style="font-size:2.5rem;"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có hóa đơn cho tháng này. Hóa đơn sẽ được chủ trọ tạo khi đến kỳ.</p>
+                    </div>
+                </div>
+
+                <!-- Hóa đơn chưa thanh toán (nợ cũ) -->
+                <div class="card mb-4" th:if="${!hoaDonChuaTT.isEmpty()}">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-exclamation-circle me-2"></i>Hóa đơn cần thanh toán
+                            <span class="badge bg-light text-danger ms-2" th:text="${hoaDonChuaTT.size()}"></span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Phòng</th>
+                                        <th>Kỳ TT</th>
+                                        <th class="text-end">Tổng tiền</th>
+                                        <th class="text-end">Đã TT</th>
+                                        <th class="text-end">Còn nợ</th>
+                                        <th>Hạn TT</th>
+                                        <th>Trạng thái</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="hd : ${hoaDonChuaTT}"
+                                        th:classappend="${hd.hanThanhToan.isBefore(T(java.time.LocalDate).now())} ? 'table-danger' : ''">
+                                        <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
+                                        <td th:text="${hd.kyThanhToan}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end text-success" th:text="${#numbers.formatDecimal(hd.daThanhToan, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end fw-bold text-danger" th:text="${#numbers.formatDecimal(hd.conNo, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td>
+                                            <span th:text="${#temporals.format(hd.hanThanhToan, 'dd/MM/yyyy')}"></span>
+                                            <br th:if="${hd.hanThanhToan.isBefore(T(java.time.LocalDate).now())}">
+                                            <small th:if="${hd.hanThanhToan.isBefore(T(java.time.LocalDate).now())}" class="text-danger fw-bold">Quá hạn!</small>
+                                        </td>
+                                        <td>
+                                            <span th:if="${hd.trangThai.name() == 'CHUA_THANH_TOAN'}" class="badge bg-danger">Chưa TT</span>
+                                            <span th:if="${hd.trangThai.name() == 'THANH_TOAN_MOT_PHAN'}" class="badge bg-warning text-dark">Một phần</span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/tenant/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
+                                               class="btn btn-sm btn-primary">
+                                                <i class="bi bi-credit-card"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lịch sử hóa đơn đã thanh toán -->
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Lịch sử hóa đơn đã thanh toán
+                        </h6>
+                        <span class="badge bg-light text-success" th:text="${hoaDonDaTT.size()} + ' hóa đơn'"></span>
+                    </div>
+                    <div class="card-body p-0" th:if="${!hoaDonDaTT.isEmpty()}">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Phòng</th>
+                                        <th>Kỳ TT</th>
+                                        <th class="text-end">Tiền phòng</th>
+                                        <th class="text-end">Điện</th>
+                                        <th class="text-end">Nước</th>
+                                        <th class="text-end">DV khác</th>
+                                        <th class="text-end">Tổng</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="hd : ${hoaDonDaTT}">
+                                        <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
+                                        <td th:text="${hd.kyThanhToan}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.phiDichVu, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td>
+                                            <a th:href="@{/tenant/hoa-don/detail/{id}(id=${hd.hoaDonId})}"
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-body text-center py-4" th:if="${hoaDonDaTT.isEmpty()}">
+                        <i class="bi bi-receipt text-muted" style="font-size:2rem;"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có lịch sử thanh toán.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== CỘT PHẢI: GIAO DỊCH GẦN ĐÂY + BẢNG GIÁ DV ==================== -->
+            <div class="col-lg-4 mb-4">
+
+                <!-- Giao dịch gần đây -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Giao dịch gần đây</h6>
+                    </div>
+                    <div class="card-body p-0" th:if="${!lichSuGD.isEmpty()}">
+                        <div class="list-group list-group-flush">
+                            <div th:each="gd : ${lichSuGD}" class="list-group-item px-3 py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="mb-0 fw-semibold text-success"
+                                           th:text="'+' + ${#numbers.formatDecimal(gd.soTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></p>
+                                        <small class="text-muted" th:if="${gd.hoaDon != null}"
+                                               th:text="'Phòng ' + ${gd.hoaDon.hopDong.phongTro.soPhong} + ' - Kỳ ' + ${gd.hoaDon.kyThanhToan}"></small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block"
+                                               th:text="${#temporals.format(gd.ngayGiaoDich, 'dd/MM/yyyy')}"></small>
+                                        <span th:if="${gd.phuongThuc.name() == 'TIEN_MAT'}" class="badge bg-secondary small">Tiền mặt</span>
+                                        <span th:if="${gd.phuongThuc.name() == 'CHUYEN_KHOAN'}" class="badge bg-info small">Chuyển khoản</span>
+                                        <span th:if="${gd.phuongThuc.name() == 'ONLINE'}" class="badge bg-primary small">Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center py-3" th:if="${lichSuGD.isEmpty()}">
+                        <i class="bi bi-inbox text-muted" style="font-size:1.5rem;"></i>
+                        <p class="text-muted small mt-1 mb-0">Chưa có giao dịch nào.</p>
+                    </div>
+                </div>
+
+                <!-- Bảng giá dịch vụ tham khảo -->
+                <div class="card mb-4" th:if="${danhSachDichVu != null && !danhSachDichVu.isEmpty()}">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="bi bi-tags me-2"></i>Bảng giá dịch vụ</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Dịch vụ</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th>ĐVT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="dv : ${danhSachDichVu}">
+                                    <td>
+                                        <i th:if="${dv.tenDV == 'Điện'}" class="bi bi-lightning text-warning me-1"></i>
+                                        <i th:if="${dv.tenDV == 'Nước'}" class="bi bi-droplet text-info me-1"></i>
+                                        <i th:if="${dv.tenDV != 'Điện' && dv.tenDV != 'Nước'}" class="bi bi-gear text-secondary me-1"></i>
+                                        <span th:text="${dv.tenDV}"></span>
+                                    </td>
+                                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(dv.donGia, 0, 'COMMA', 0, 'POINT')}"></td>
+                                    <td class="text-muted small" th:text="${dv.donViTinh ?: ''}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Thông tin hữu ích -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Lưu ý thanh toán</h6>
+                    </div>
+                    <div class="card-body small">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-1"></i>
+                                Thanh toán đúng hạn để tránh phí phạt.
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-credit-card text-primary me-1"></i>
+                                Hỗ trợ thanh toán: Tiền mặt, Chuyển khoản, Online.
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-telephone text-info me-1"></i>
+                                Liên hệ chủ trọ nếu có thắc mắc về hóa đơn.
+                            </li>
+                            <li>
+                                <i class="bi bi-calendar-event text-warning me-1"></i>
+                                Hóa đơn được tạo vào đầu mỗi tháng.
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

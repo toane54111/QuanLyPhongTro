@@ -15,4 +15,23 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Long> {
 
     @Query("SELECT h FROM HoaDon h WHERE h.hopDong.khachThue.userId = :khachThueId ORDER BY h.ngayTao DESC")
     List<HoaDon> findByKhachThueOrderByNgayTaoDesc(Long khachThueId);
+
+    // Hóa đơn chưa thanh toán / thanh toán một phần của khách
+    @Query("SELECT h FROM HoaDon h WHERE h.hopDong.khachThue.userId = :khachThueId " +
+           "AND h.trangThai <> 'DA_THANH_TOAN' ORDER BY h.hanThanhToan ASC")
+    List<HoaDon> findUnpaidByKhachThue(Long khachThueId);
+
+    // Hóa đơn đã thanh toán (lịch sử)
+    @Query("SELECT h FROM HoaDon h WHERE h.hopDong.khachThue.userId = :khachThueId " +
+           "AND h.trangThai = 'DA_THANH_TOAN' ORDER BY h.kyThanhToan DESC")
+    List<HoaDon> findPaidByKhachThue(Long khachThueId);
+
+    // Tổng tiền tất cả hóa đơn của khách
+    @Query("SELECT COALESCE(SUM(h.tongTien), 0) FROM HoaDon h WHERE h.hopDong.khachThue.userId = :khachThueId")
+    java.math.BigDecimal sumTongTienByKhachThue(Long khachThueId);
+
+    // Hóa đơn theo kỳ thanh toán của khách
+    @Query("SELECT h FROM HoaDon h WHERE h.hopDong.khachThue.userId = :khachThueId " +
+           "AND h.kyThanhToan = :kyThanhToan")
+    List<HoaDon> findByKhachThueAndKyThanhToan(Long khachThueId, String kyThanhToan);
 }

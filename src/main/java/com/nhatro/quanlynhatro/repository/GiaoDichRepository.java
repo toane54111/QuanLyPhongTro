@@ -11,4 +11,14 @@ public interface GiaoDichRepository extends JpaRepository<GiaoDich, Long> {
 
     @Query("SELECT COALESCE(SUM(g.soTien), 0) FROM GiaoDich g WHERE g.hoaDon.hoaDonId = :hoaDonId")
     BigDecimal sumSoTienByHoaDonId(Long hoaDonId);
+
+    // Tổng tiền đã thanh toán của khách (qua tất cả hóa đơn)
+    @Query("SELECT COALESCE(SUM(g.soTien), 0) FROM GiaoDich g " +
+           "WHERE g.hoaDon.hopDong.khachThue.userId = :khachThueId")
+    BigDecimal sumTotalPaidByKhachThue(Long khachThueId);
+
+    // Lịch sử giao dịch của khách, sắp xếp mới nhất
+    @Query("SELECT g FROM GiaoDich g WHERE g.hoaDon.hopDong.khachThue.userId = :khachThueId " +
+           "ORDER BY g.ngayGiaoDich DESC")
+    List<GiaoDich> findByKhachThueOrderByNgayDesc(Long khachThueId);
 }

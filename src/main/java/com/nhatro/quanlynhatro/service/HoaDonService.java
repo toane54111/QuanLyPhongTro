@@ -88,6 +88,33 @@ public class HoaDonService {
         return giaoDichRepository.findByHoaDon_HoaDonId(hoaDonId);
     }
 
+    public List<HoaDon> findUnpaidByKhachThueId2(Long khachThueId) {
+        return hoaDonRepository.findUnpaidByKhachThue(khachThueId);
+    }
+
+    public List<HoaDon> findPaidByKhachThueId(Long khachThueId) {
+        return hoaDonRepository.findPaidByKhachThue(khachThueId);
+    }
+
+    public List<HoaDon> findByKhachThueAndKyThanhToan(Long khachThueId, String kyThanhToan) {
+        return hoaDonRepository.findByKhachThueAndKyThanhToan(khachThueId, kyThanhToan);
+    }
+
+    public BigDecimal getTongNoByKhachThue(Long khachThueId) {
+        List<HoaDon> unpaid = hoaDonRepository.findUnpaidByKhachThue(khachThueId);
+        return unpaid.stream()
+                .map(HoaDon::getConNo)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getTongDaThanhToanByKhachThue(Long khachThueId) {
+        return giaoDichRepository.sumTotalPaidByKhachThue(khachThueId);
+    }
+
+    public List<GiaoDich> getLichSuGiaoDichByKhachThue(Long khachThueId) {
+        return giaoDichRepository.findByKhachThueOrderByNgayDesc(khachThueId);
+    }
+
     @Transactional
     public HoaDon create(HoaDon hoaDon, Long hopDongId, String kyThanhToan) {
         if (hoaDonRepository.existsByHopDong_HopDongIdAndKyThanhToan(hopDongId, kyThanhToan)) {
