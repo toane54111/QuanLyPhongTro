@@ -1,5 +1,6 @@
 package com.nhatro.quanlynhatro.entity;
 
+import com.nhatro.quanlynhatro.enums.TrangThaiGiaoDich;
 import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
 import jakarta.persistence.*;
 import lombok.*;
@@ -57,6 +58,16 @@ public class HoaDon {
     public BigDecimal getDaThanhToan() {
         if (giaoDichs == null) return BigDecimal.ZERO;
         return giaoDichs.stream()
+                .filter(gd -> gd.getTrangThaiGD() == null || gd.getTrangThaiGD() == TrangThaiGiaoDich.DA_XAC_NHAN)
+                .map(GiaoDich::getSoTien)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transient
+    public BigDecimal getDangChoXacNhan() {
+        if (giaoDichs == null) return BigDecimal.ZERO;
+        return giaoDichs.stream()
+                .filter(gd -> gd.getTrangThaiGD() == TrangThaiGiaoDich.CHO_XAC_NHAN)
                 .map(GiaoDich::getSoTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

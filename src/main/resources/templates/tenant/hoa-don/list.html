@@ -331,7 +331,8 @@
                                                th:text="${#temporals.format(gd.ngayGiaoDich, 'dd/MM/yyyy')}"></small>
                                         <span th:if="${gd.phuongThuc.name() == 'TIEN_MAT'}" class="badge bg-secondary small">Tiền mặt</span>
                                         <span th:if="${gd.phuongThuc.name() == 'CHUYEN_KHOAN'}" class="badge bg-info small">Chuyển khoản</span>
-                                        <span th:if="${gd.phuongThuc.name() == 'ONLINE'}" class="badge bg-primary small">Online</span>
+                                        <span th:if="${gd.phuongThuc.name() == 'ONLINE'}" class="badge bg-primary small">Ví điện tử</span>
+                                        <span th:if="${gd.trangThaiGD != null && gd.trangThaiGD.name() == 'CHO_XAC_NHAN'}" class="badge bg-warning text-dark small">Chờ XN</span>
                                     </div>
                                 </div>
                             </div>

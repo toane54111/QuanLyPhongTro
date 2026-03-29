@@ -1,39 +1,61 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Ghi nhận thanh toán</title></head>
+<head><title>Thanh toán hóa đơn</title></head>
 <body>
-<div th:replace="~{layout/main :: layout(title='Ghi nhận thanh toán', content=~{::mainContent})}">
+<div th:replace="~{layout/main :: layout(title='Thanh toán hóa đơn', content=~{::mainContent})}">
     <div th:fragment="mainContent">
 
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-            <span th:text="${success}"></span>
+            <i class="bi bi-check-circle me-2"></i><span th:text="${success}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
-            <span th:text="${error}"></span>
+            <i class="bi bi-exclamation-circle me-2"></i><span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-cash-stack me-2"></i>Ghi nhận thanh toán - Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
+            <h2><i class="bi bi-cash-stack me-2"></i>Thanh toán - Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
+            <a th:href="@{/landlord/hoa-don/detail/{id}(id=${hoaDon.hoaDonId})}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </a>
         </div>
 
         <div class="row g-4">
-            <!-- Thông tin hóa đơn -->
+            <!-- ==================== CỘT TRÁI: THÔNG TIN HÓA ĐƠN ==================== -->
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Thông tin hóa đơn</h5>
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-receipt me-2"></i>Thông tin hóa đơn</h6>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted">Phòng:</td>
+                                <td class="fw-bold" th:text="${hoaDon.hopDong.phongTro.soPhong}"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Khách thuê:</td>
+                                <td class="fw-bold" th:text="${hoaDon.hopDong.khachThue.hoTen}"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Kỳ:</td>
+                                <td th:text="${hoaDon.kyThanhToan}"></td>
+                            </tr>
+                        </table>
+                        <hr>
+                        <div class="mb-2">
                             <span class="text-muted d-block">Tổng tiền</span>
                             <span class="fs-5 fw-bold" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-2">
                             <span class="text-muted d-block">Đã thanh toán</span>
                             <span class="fs-5 text-success" th:text="${#numbers.formatDecimal(hoaDon.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                        </div>
+                        <div th:if="${hoaDon.dangChoXacNhan > 0}" class="mb-2">
+                            <span class="text-muted d-block">Đang chờ xác nhận</span>
+                            <span class="fs-5 text-warning" th:text="${#numbers.formatDecimal(hoaDon.dangChoXacNhan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
                         </div>
                         <div>
                             <span class="text-muted d-block">Còn nợ</span>
@@ -43,54 +65,135 @@
                 </div>
             </div>
 
-            <!-- Form thanh toán -->
+            <!-- ==================== CỘT PHẢI: HÀNH ĐỘNG ==================== -->
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Thông tin thanh toán</h5>
+
+                <!-- === 1. Giao dịch chờ xác nhận (chuyển khoản từ khách) === -->
+                <div class="card mb-4" th:if="${pendingGD != null && !pendingGD.isEmpty()}">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-hourglass-split me-2"></i>Chuyển khoản chờ xác nhận
+                            <span class="badge bg-dark ms-2" th:text="${pendingGD.size()}"></span>
+                        </h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/landlord/hoa-don/payment/{id}(id=${hoaDon.hoaDonId})}"
-                              th:object="${giaoDich}" method="post">
-                            <div class="mb-3">
-                                <label for="soTien" class="form-label">Số tiền <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="soTien"
-                                           th:field="*{soTien}" required min="1"
-                                           placeholder="Nhập số tiền thanh toán">
-                                    <span class="input-group-text">VND</span>
+                        <p class="text-muted small mb-3">Khách đã báo chuyển khoản. Vui lòng kiểm tra tài khoản ngân hàng rồi xác nhận hoặc từ chối.</p>
+
+                        <div th:each="gd : ${pendingGD}" class="border rounded p-3 mb-3 bg-light">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="mb-1">
+                                        <span class="text-muted small">Thời gian:</span>
+                                        <span class="fw-semibold" th:text="${#temporals.format(gd.ngayGiaoDich, 'dd/MM/yyyy HH:mm')}"></span>
+                                    </div>
+                                    <div class="mb-1">
+                                        <span class="text-muted small">Số tiền:</span>
+                                        <span class="fw-bold text-primary fs-5" th:text="${#numbers.formatDecimal(gd.soTien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <form th:action="@{/landlord/hoa-don/xac-nhan-gd/{gdId}(gdId=${gd.giaoDichId})}"
+                                          method="post" class="d-inline">
+                                        <input type="hidden" name="hoaDonId" th:value="${hoaDon.hoaDonId}">
+                                        <button type="submit" class="btn btn-success me-2"
+                                                onclick="return confirm('Xác nhận đã nhận được tiền chuyển khoản?')">
+                                            <i class="bi bi-check-lg me-1"></i>Đã nhận tiền
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/landlord/hoa-don/tu-choi-gd/{gdId}(gdId=${gd.giaoDichId})}"
+                                          method="post" class="d-inline">
+                                        <input type="hidden" name="hoaDonId" th:value="${hoaDon.hoaDonId}">
+                                        <button type="submit" class="btn btn-outline-danger"
+                                                onclick="return confirm('Từ chối giao dịch này? (chưa nhận được tiền)')">
+                                            <i class="bi bi-x-lg me-1"></i>Từ chối
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="phuongThuc" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
-                                <select class="form-select" id="phuongThuc" th:field="*{phuongThuc}" required>
-                                    <option value="">-- Chọn phương thức --</option>
-                                    <option th:each="pt : ${phuongThucThanhToans}"
-                                            th:value="${pt}"
-                                            th:text="${pt.name() == 'TIEN_MAT' ? 'Tiền mặt' :
-                                                (pt.name() == 'CHUYEN_KHOAN' ? 'Chuyển khoản' : 'Online')}">
-                                    </option>
-                                </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === 2. Thu tiền mặt === -->
+                <div class="card mb-4" th:if="${hoaDon.conNo > 0}">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Thu tiền mặt</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/landlord/hoa-don/thu-tien-mat/{id}(id=${hoaDon.hoaDonId})}" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="soTien" class="form-label">Số tiền thu <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="soTien" name="soTien"
+                                               required min="1" th:max="${hoaDon.conNo}"
+                                               th:value="${hoaDon.conNo}"
+                                               placeholder="Nhập số tiền">
+                                        <span class="input-group-text">VND</span>
+                                    </div>
+                                    <small class="text-muted">Tối đa: <span th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')}"></span> VND</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ghiChu" class="form-label">Ghi chú</label>
+                                    <input type="text" class="form-control" id="ghiChu" name="ghiChu"
+                                           placeholder="VD: Thu tiền mặt tại phòng">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="ghiChu" class="form-label">Ghi chú</label>
-                                <textarea class="form-control" id="ghiChu" th:field="*{ghiChu}"
-                                          rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-circle me-1"></i>Xác nhận thanh toán
-                                </button>
-                                <a th:href="@{/landlord/hoa-don/detail/{id}(id=${hoaDon.hoaDonId})}"
-                                   class="btn btn-outline-secondary">
-                                    <i class="bi bi-x-circle me-1"></i>Hủy
-                                </a>
-                            </div>
+                            <button type="submit" class="btn btn-success"
+                                    onclick="return confirm('Xác nhận thu tiền mặt?')">
+                                <i class="bi bi-check-circle me-1"></i>Xác nhận thu tiền
+                            </button>
                         </form>
+                    </div>
+                </div>
+
+                <!-- === 3. Đã thanh toán đủ === -->
+                <div class="card mb-4" th:if="${hoaDon.conNo <= 0 && (pendingGD == null || pendingGD.isEmpty())}">
+                    <div class="card-body text-center py-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-4 mb-3">
+                            <i class="bi bi-check-circle text-success" style="font-size:3rem;"></i>
+                        </div>
+                        <h5 class="text-success">Hóa đơn đã thanh toán đầy đủ</h5>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- === Script in biên lai === -->
+        <script th:if="${bienLaiGD != null}" th:inline="javascript">
+            (function() {
+                var hoaDonId = /*[[${hoaDon.hoaDonId}]]*/ 0;
+                var phong = /*[[${hoaDon.hopDong.phongTro.soPhong}]]*/ '';
+                var khachThue = /*[[${hoaDon.hopDong.khachThue.hoTen}]]*/ '';
+                var kyTT = /*[[${hoaDon.kyThanhToan}]]*/ '';
+                var tongTien = /*[[${hoaDon.tongTien}]]*/ 0;
+
+                var w = window.open('', '_blank', 'width=400,height=600');
+                w.document.write('<html><head><title>Biên lai thu tiền</title>');
+                w.document.write('<style>body{font-family:monospace;padding:20px;max-width:350px;margin:0 auto;}');
+                w.document.write('.center{text-align:center;}.line{border-top:1px dashed #000;margin:10px 0;}');
+                w.document.write('.row{display:flex;justify-content:space-between;margin:5px 0;}');
+                w.document.write('@media print{.no-print{display:none;}}</style></head><body>');
+                w.document.write('<div class="center"><h3>BIÊN LAI THU TIỀN</h3>');
+                w.document.write('<p>Quản lý nhà trọ</p></div>');
+                w.document.write('<div class="line"></div>');
+                w.document.write('<div class="row"><span>Hóa đơn:</span><span>#' + hoaDonId + '</span></div>');
+                w.document.write('<div class="row"><span>Phòng:</span><span>' + phong + '</span></div>');
+                w.document.write('<div class="row"><span>Khách:</span><span>' + khachThue + '</span></div>');
+                w.document.write('<div class="row"><span>Kỳ:</span><span>' + kyTT + '</span></div>');
+                w.document.write('<div class="line"></div>');
+                w.document.write('<div class="row"><span><b>Tổng tiền:</b></span><span><b>' + Number(tongTien).toLocaleString('vi-VN') + ' VND</b></span></div>');
+                w.document.write('<div class="line"></div>');
+                w.document.write('<div class="center"><p>Ngày: ' + new Date().toLocaleDateString('vi-VN') + '</p>');
+                w.document.write('<p style="margin-top:30px;">_________________<br>Người thu tiền</p></div>');
+                w.document.write('<div class="center no-print" style="margin-top:20px;">');
+                w.document.write('<button onclick="window.print()" style="padding:8px 20px;cursor:pointer;">In biên lai</button></div>');
+                w.document.write('</body></html>');
+                w.document.close();
+            })();
+        </script>
 
     </div>
 </div>

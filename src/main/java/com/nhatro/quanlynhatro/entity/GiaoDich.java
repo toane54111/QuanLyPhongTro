@@ -1,6 +1,7 @@
 package com.nhatro.quanlynhatro.entity;
 
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
+import com.nhatro.quanlynhatro.enums.TrangThaiGiaoDich;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -26,8 +27,24 @@ public class GiaoDich {
     @Column(nullable = false)
     private PhuongThucThanhToan phuongThuc;
 
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) default 'DA_XAC_NHAN'")
+    @Builder.Default
+    private TrangThaiGiaoDich trangThaiGD = TrangThaiGiaoDich.DA_XAC_NHAN;
+
+    @Builder.Default
     private LocalDateTime ngayGiaoDich = LocalDateTime.now();
 
     @Column(length = 255)
     private String ghiChu;
+
+    @PrePersist
+    private void prePersist() {
+        if (trangThaiGD == null) {
+            trangThaiGD = TrangThaiGiaoDich.DA_XAC_NHAN;
+        }
+        if (ngayGiaoDich == null) {
+            ngayGiaoDich = LocalDateTime.now();
+        }
+    }
 }

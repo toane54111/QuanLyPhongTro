@@ -18,10 +18,11 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-receipt me-2"></i>Chi tiết Hóa đơn #<span th:text="${hoaDon.hoaDonId}"></span></h2>
             <div>
-                <a th:if="${hoaDon.conNo > 0}"
+                <a th:if="${hoaDon.conNo > 0 || hoaDon.dangChoXacNhan > 0}"
                    th:href="@{/landlord/hoa-don/payment/{id}(id=${hoaDon.hoaDonId})}"
                    class="btn btn-success me-2">
-                    <i class="bi bi-cash-stack me-1"></i>Ghi nhận thanh toán
+                    <i class="bi bi-cash-stack me-1"></i>Thanh toán
+                    <span th:if="${hoaDon.dangChoXacNhan > 0}" class="badge bg-warning text-dark ms-1">Chờ XN</span>
                 </a>
                 <a th:href="@{/landlord/hoa-don}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Quay lại
@@ -109,6 +110,10 @@
                                 <td>Đã thanh toán</td>
                                 <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.daThanhToan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                             </tr>
+                            <tr th:if="${hoaDon.dangChoXacNhan > 0}" class="text-warning">
+                                <td><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận CK</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.dangChoXacNhan, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                            </tr>
                             <tr class="text-danger fw-bold">
                                 <td>Còn nợ</td>
                                 <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.conNo, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
@@ -133,6 +138,7 @@
                             <th>#</th>
                             <th>Số tiền</th>
                             <th>Phương thức</th>
+                            <th>Trạng thái</th>
                             <th>Ngày giao dịch</th>
                             <th>Ghi chú</th>
                         </tr>
@@ -146,8 +152,13 @@
                                       th:classappend="${gd.phuongThuc.name() == 'TIEN_MAT' ? 'bg-success' :
                                           (gd.phuongThuc.name() == 'CHUYEN_KHOAN' ? 'bg-primary' : 'bg-info')}"
                                       th:text="${gd.phuongThuc.name() == 'TIEN_MAT' ? 'Tiền mặt' :
-                                          (gd.phuongThuc.name() == 'CHUYEN_KHOAN' ? 'Chuyển khoản' : 'Online')}">
+                                          (gd.phuongThuc.name() == 'CHUYEN_KHOAN' ? 'Chuyển khoản' : 'Ví điện tử')}">
                                 </span>
+                            </td>
+                            <td>
+                                <span th:if="${gd.trangThaiGD == null || gd.trangThaiGD.name() == 'DA_XAC_NHAN'}" class="badge bg-success">Đã xác nhận</span>
+                                <span th:if="${gd.trangThaiGD != null && gd.trangThaiGD.name() == 'CHO_XAC_NHAN'}" class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                <span th:if="${gd.trangThaiGD != null && gd.trangThaiGD.name() == 'DA_HUY'}" class="badge bg-danger">Đã hủy</span>
                             </td>
                             <td th:text="${#temporals.format(gd.ngayGiaoDich, 'dd/MM/yyyy HH:mm')}"></td>
                             <td th:text="${gd.ghiChu}"></td>

@@ -6,6 +6,7 @@ import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HoaDon;
 import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
+import com.nhatro.quanlynhatro.enums.TrangThaiGiaoDich;
 import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
 import com.nhatro.quanlynhatro.repository.ChiSoDienNuocRepository;
 import com.nhatro.quanlynhatro.repository.DichVuRepository;
@@ -179,20 +180,18 @@ public class HoaDonService {
         }
 
         giaoDich.setHoaDon(hoaDon);
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.DA_XAC_NHAN);
         if (giaoDich.getNgayGiaoDich() == null) {
             giaoDich.setNgayGiaoDich(LocalDateTime.now());
         }
         giaoDichRepository.save(giaoDich);
 
-        BigDecimal totalPaid = giaoDichRepository.sumSoTienByHoaDonId(hoaDonId);
-        if (totalPaid.compareTo(hoaDon.getTongTien()) >= 0) {
-            hoaDon.setTrangThai(TrangThaiHoaDon.DA_THANH_TOAN);
-        } else {
-            hoaDon.setTrangThai(TrangThaiHoaDon.THANH_TOAN_MOT_PHAN);
-        }
-        hoaDonRepository.save(hoaDon);
+        capNhatTrangThaiHoaDon(hoaDon);
     }
 
+    /**
+     * Thanh toán trực tiếp (ví điện tử - tự động xác nhận)
+     */
     @Transactional
     public void thanhToan(HoaDon hoaDon, PhuongThucThanhToan phuongThuc) {
         BigDecimal conNo = hoaDon.getConNo();
@@ -204,12 +203,126 @@ public class HoaDonService {
         giaoDich.setHoaDon(hoaDon);
         giaoDich.setSoTien(conNo);
         giaoDich.setPhuongThuc(phuongThuc);
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.DA_XAC_NHAN);
         giaoDich.setNgayGiaoDich(LocalDateTime.now());
         giaoDich.setGhiChu("Thanh toán qua " + phuongThuc.name());
         giaoDichRepository.save(giaoDich);
 
         hoaDon.setTrangThai(TrangThaiHoaDon.DA_THANH_TOAN);
         hoaDonRepository.save(hoaDon);
+    }
+
+    /**
+     * Khách tạo yêu cầu chuyển khoản → trạng thái CHỜ XÁC NHẬN
+     */
+    @Transactional
+    public GiaoDich taoBankTransferPending(HoaDon hoaDon) {
+        BigDecimal conNo = hoaDon.getConNo();
+        if (conNo.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Hóa đơn đã được thanh toán đầy đủ");
+        }
+
+        // Kiểm tra đã có giao dịch chờ xác nhận chưa
+        List<GiaoDich> pending = giaoDichRepository.findByHoaDon_HoaDonIdAndTrangThaiGD(
+                hoaDon.getHoaDonId(), TrangThaiGiaoDich.CHO_XAC_NHAN);
+        if (!pending.isEmpty()) {
+            throw new RuntimeException("Đã có giao dịch chuyển khoản đang chờ xác nhận cho hóa đơn này");
+        }
+
+        GiaoDich giaoDich = new GiaoDich();
+        giaoDich.setHoaDon(hoaDon);
+        giaoDich.setSoTien(conNo);
+        giaoDich.setPhuongThuc(PhuongThucThanhToan.CHUYEN_KHOAN);
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.CHO_XAC_NHAN);
+        giaoDich.setNgayGiaoDich(LocalDateTime.now());
+        giaoDich.setGhiChu("Chuyển khoản ngân hàng - chờ xác nhận");
+        return giaoDichRepository.save(giaoDich);
+    }
+
+    /**
+     * Chủ trọ xác nhận đã nhận chuyển khoản
+     */
+    @Transactional
+    public void xacNhanGiaoDich(Long giaoDichId) {
+        GiaoDich giaoDich = giaoDichRepository.findById(giaoDichId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch"));
+
+        if (giaoDich.getTrangThaiGD() != TrangThaiGiaoDich.CHO_XAC_NHAN) {
+            throw new RuntimeException("Giao dịch này không ở trạng thái chờ xác nhận");
+        }
+
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.DA_XAC_NHAN);
+        giaoDich.setGhiChu("Chuyển khoản ngân hàng - đã xác nhận");
+        giaoDichRepository.save(giaoDich);
+
+        // Cập nhật trạng thái hóa đơn
+        HoaDon hoaDon = giaoDich.getHoaDon();
+        capNhatTrangThaiHoaDon(hoaDon);
+    }
+
+    /**
+     * Chủ trọ từ chối giao dịch chuyển khoản
+     */
+    @Transactional
+    public void tuChoiGiaoDich(Long giaoDichId) {
+        GiaoDich giaoDich = giaoDichRepository.findById(giaoDichId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch"));
+
+        if (giaoDich.getTrangThaiGD() != TrangThaiGiaoDich.CHO_XAC_NHAN) {
+            throw new RuntimeException("Giao dịch này không ở trạng thái chờ xác nhận");
+        }
+
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.DA_HUY);
+        giaoDich.setGhiChu("Chuyển khoản bị từ chối - chưa nhận được tiền");
+        giaoDichRepository.save(giaoDich);
+    }
+
+    /**
+     * Chủ trọ ghi nhận thu tiền mặt
+     */
+    @Transactional
+    public GiaoDich thuTienMat(Long hoaDonId, BigDecimal soTien, String ghiChu) {
+        HoaDon hoaDon = findById(hoaDonId);
+        if (hoaDon.getTrangThai() == TrangThaiHoaDon.DA_THANH_TOAN) {
+            throw new RuntimeException("Hóa đơn này đã được thanh toán đầy đủ");
+        }
+        if (soTien.compareTo(hoaDon.getConNo()) > 0) {
+            throw new RuntimeException("Số tiền thu vượt quá số nợ còn lại");
+        }
+
+        GiaoDich giaoDich = new GiaoDich();
+        giaoDich.setHoaDon(hoaDon);
+        giaoDich.setSoTien(soTien);
+        giaoDich.setPhuongThuc(PhuongThucThanhToan.TIEN_MAT);
+        giaoDich.setTrangThaiGD(TrangThaiGiaoDich.DA_XAC_NHAN);
+        giaoDich.setNgayGiaoDich(LocalDateTime.now());
+        giaoDich.setGhiChu(ghiChu != null && !ghiChu.isBlank() ? ghiChu : "Thu tiền mặt");
+        giaoDichRepository.save(giaoDich);
+
+        capNhatTrangThaiHoaDon(hoaDon);
+        return giaoDich;
+    }
+
+    /**
+     * Cập nhật trạng thái hóa đơn dựa trên tổng đã thanh toán (đã xác nhận)
+     */
+    private void capNhatTrangThaiHoaDon(HoaDon hoaDon) {
+        BigDecimal totalPaid = giaoDichRepository.sumSoTienByHoaDonId(hoaDon.getHoaDonId());
+        if (totalPaid.compareTo(hoaDon.getTongTien()) >= 0) {
+            hoaDon.setTrangThai(TrangThaiHoaDon.DA_THANH_TOAN);
+        } else if (totalPaid.compareTo(BigDecimal.ZERO) > 0) {
+            hoaDon.setTrangThai(TrangThaiHoaDon.THANH_TOAN_MOT_PHAN);
+        } else {
+            hoaDon.setTrangThai(TrangThaiHoaDon.CHUA_THANH_TOAN);
+        }
+        hoaDonRepository.save(hoaDon);
+    }
+
+    /**
+     * Danh sách giao dịch chờ xác nhận (cho chủ trọ)
+     */
+    public List<GiaoDich> findPendingTransactions() {
+        return giaoDichRepository.findAllPending();
     }
 
     public boolean existsByHopDongIdAndKyThanhToan(Long hopDongId, String kyThanhToan) {

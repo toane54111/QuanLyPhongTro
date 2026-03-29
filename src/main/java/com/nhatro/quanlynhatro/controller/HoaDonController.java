@@ -3,6 +3,7 @@ package com.nhatro.quanlynhatro.controller;
 import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HoaDon;
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
+import com.nhatro.quanlynhatro.enums.TrangThaiGiaoDich;
 import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
 import com.nhatro.quanlynhatro.entity.HopDong;
 import com.nhatro.quanlynhatro.service.HoaDonService;
@@ -14,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,8 @@ public class HoaDonController {
             model.addAttribute("trangThaiHoaDons", TrangThaiHoaDon.values());
             model.addAttribute("selectedTrangThai", trangThai);
             model.addAttribute("selectedKyThanhToan", kyThanhToan);
+            // Đếm giao dịch chờ xác nhận
+            model.addAttribute("pendingCount", hoaDonService.findPendingTransactions().size());
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách hóa đơn: " + e.getMessage());
         }
@@ -110,7 +114,6 @@ public class HoaDonController {
                     ? LocalDate.parse(hanThanhToan) : LocalDate.now().plusDays(15);
             int count = hoaDonService.createBatchInvoices(kyThanhToan, han);
 
-            // UC14 (extend): Gửi thông báo cho khách thuê
             List<HopDong> activeContracts = hopDongService.findActiveContracts();
             for (HopDong hd : activeContracts) {
                 if (hoaDonService.existsByHopDongIdAndKyThanhToan(hd.getHopDongId(), kyThanhToan)) {
@@ -144,13 +147,18 @@ public class HoaDonController {
         }
     }
 
+    /**
+     * Trang thu tiền mặt / xác nhận chuyển khoản
+     */
     @GetMapping("/payment/{id}")
     public String showPaymentForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             HoaDon hoaDon = hoaDonService.findById(id);
+            List<GiaoDich> pendingGD = hoaDonService.findGiaoDichByHoaDonId(id).stream()
+                    .filter(gd -> gd.getTrangThaiGD() == TrangThaiGiaoDich.CHO_XAC_NHAN)
+                    .toList();
             model.addAttribute("hoaDon", hoaDon);
-            model.addAttribute("giaoDich", new GiaoDich());
-            model.addAttribute("phuongThucThanhToans", PhuongThucThanhToan.values());
+            model.addAttribute("pendingGD", pendingGD);
             return "landlord/hoa-don/payment";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy hóa đơn: " + e.getMessage());
@@ -158,16 +166,72 @@ public class HoaDonController {
         }
     }
 
-    @PostMapping("/payment/{id}")
-    public String recordPayment(@PathVariable Long id,
-                                @ModelAttribute GiaoDich giaoDich,
-                                RedirectAttributes redirectAttributes) {
+    /**
+     * Chủ trọ ghi nhận thu tiền mặt
+     */
+    @PostMapping("/thu-tien-mat/{id}")
+    public String thuTienMat(@PathVariable Long id,
+                             @RequestParam BigDecimal soTien,
+                             @RequestParam(required = false) String ghiChu,
+                             RedirectAttributes redirectAttributes) {
         try {
-            hoaDonService.recordPayment(id, giaoDich);
-            redirectAttributes.addFlashAttribute("success", "Ghi nhận thanh toán thành công!");
+            GiaoDich gd = hoaDonService.thuTienMat(id, soTien, ghiChu);
+            redirectAttributes.addFlashAttribute("success", "Thu tiền mặt thành công!");
+            redirectAttributes.addFlashAttribute("bienLaiGD", gd.getGiaoDichId());
+            return "redirect:/landlord/hoa-don/payment/" + id;
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi ghi nhận thanh toán: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/landlord/hoa-don/payment/" + id;
         }
-        return "redirect:/landlord/hoa-don/detail/" + id;
+    }
+
+    /**
+     * Chủ trọ xác nhận đã nhận chuyển khoản
+     */
+    @PostMapping("/xac-nhan-gd/{giaoDichId}")
+    public String xacNhanGiaoDich(@PathVariable Long giaoDichId,
+                                  @RequestParam Long hoaDonId,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            hoaDonService.xacNhanGiaoDich(giaoDichId);
+            redirectAttributes.addFlashAttribute("success", "Xác nhận chuyển khoản thành công!");
+            return "redirect:/landlord/hoa-don/payment/" + hoaDonId;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/landlord/hoa-don/payment/" + hoaDonId;
+        }
+    }
+
+    /**
+     * Chủ trọ từ chối giao dịch chuyển khoản
+     */
+    @PostMapping("/tu-choi-gd/{giaoDichId}")
+    public String tuChoiGiaoDich(@PathVariable Long giaoDichId,
+                                 @RequestParam Long hoaDonId,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            hoaDonService.tuChoiGiaoDich(giaoDichId);
+            redirectAttributes.addFlashAttribute("success", "Đã từ chối giao dịch chuyển khoản.");
+            return "redirect:/landlord/hoa-don/payment/" + hoaDonId;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/landlord/hoa-don/payment/" + hoaDonId;
+        }
+    }
+
+    /**
+     * In biên lai thanh toán
+     */
+    @GetMapping("/bien-lai/{giaoDichId}")
+    public String inBienLai(@PathVariable Long giaoDichId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            GiaoDich giaoDich = hoaDonService.findGiaoDichByHoaDonId(0L).stream().findFirst().orElse(null);
+            // Tìm giao dịch từ repository thông qua service
+            model.addAttribute("giaoDichId", giaoDichId);
+            return "landlord/hoa-don/payment"; // Biên lai được in bằng JS trong payment page
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/landlord/hoa-don";
+        }
     }
 }
