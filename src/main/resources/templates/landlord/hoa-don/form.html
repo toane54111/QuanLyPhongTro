@@ -23,7 +23,7 @@
         <!-- Form -->
         <div class="card">
             <div class="card-body">
-                <form th:action="@{/landlord/hoa-don/create}" method="post" th:object="${hoaDon}">
+                <form id="createInvoiceForm" th:action="@{/landlord/hoa-don/create}" method="post" th:object="${hoaDon}">
 
                     <!-- 1. Chọn hợp đồng + kỳ thanh toán -->
                     <div class="row mb-3">
@@ -256,7 +256,7 @@
         if (nuocMoiInput) nuocMoiInput.addEventListener('input', updatePreview);
 
         window.confirmCreate = function() {
-            var form = document.querySelector('form');
+            var form = document.getElementById('createInvoiceForm');
             if(form.reportValidity()) {
                 var hopDong = selectHD.options[selectHD.selectedIndex].text;
                 var kiTT = kyThanhToanInput.value;

@@ -192,6 +192,10 @@ public class HoaDonController {
             HoaDon hoaDon = hoaDonService.findById(id);
             model.addAttribute("hoaDon", hoaDon);
             model.addAttribute("danhSachGiaoDich", hoaDonService.findGiaoDichByHoaDonId(id));
+
+            chiSoDienNuocService.findByPhongIdAndKyGhi(hoaDon.getHopDong().getPhongTro().getPhongId(), hoaDon.getKyThanhToan())
+                    .ifPresent(cs -> model.addAttribute("chiSo", cs));
+
             return "landlord/hoa-don/detail";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy hóa đơn: " + e.getMessage());

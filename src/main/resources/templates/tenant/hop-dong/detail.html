@@ -14,87 +14,7 @@
             <span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-file-earmark-text me-2"></i>Chi tiết Hợp đồng #<span th:text="${hopDong.hopDongId}"></span></h2>
-        </div>
-
-        <!-- Contract Info Card -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông tin hợp đồng</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <strong>Phòng:</strong>
-                        <span th:text="${hopDong.phongTro.soPhong}"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Khu trọ:</strong>
-                        <span th:text="${hopDong.phongTro.khuTro.tenKhu}"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Ngày bắt đầu:</strong>
-                        <span th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')}"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Ngày kết thúc:</strong>
-                        <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Giá thuê:</strong>
-
-                        <!-- Giá gốc (chỉ gạch ngang khi giá hiện tại KHÁC giá gốc) -->
-                        <span th:if="${giaThueInfo != null && giaThueInfo['coLichSuGia'] && giaThueInfo['giaHienTai'].compareTo(giaThueInfo['giaGoc']) != 0}">
-                            <span class="text-muted text-decoration-line-through small me-1"
-                                  th:text="${#numbers.formatDecimal(giaThueInfo['giaGoc'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                            <i class="bi bi-arrow-right text-muted small me-1"></i>
-                        </span>
-
-                        <!-- Giá đang áp dụng hiện tại -->
-                        <span class="fw-bold text-primary"
-                              th:if="${giaThueInfo != null}"
-                              th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                        <span th:if="${giaThueInfo == null}"
-                              th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-
-                        <!-- Giá sắp tới (phụ lục đã duyệt nhưng chưa đến tháng áp dụng) -->
-                        <div th:if="${giaThueInfo != null && giaThueInfo['giaSapToi'] != null}" class="mt-1">
-                            <span class="badge bg-info text-dark">
-                                <i class="bi bi-clock-history me-1"></i>Từ tháng
-                                <span th:text="${giaThueInfo['thangApDungGiaMoi']}"></span>:
-                                <span th:text="${#numbers.formatDecimal(giaThueInfo['giaSapToi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                            </span>
-                        </div>
-
-                        <!-- Phụ lục đang chờ duyệt -->
-                        <div th:if="${giaThueInfo != null && giaThueInfo['pendingGiaMoi'] != null}" class="mt-1">
-                            <span class="badge bg-warning text-dark">
-                                <i class="bi bi-hourglass-split me-1"></i>Chờ duyệt:
-                                <span th:text="${#numbers.formatDecimal(giaThueInfo['pendingGiaMoi'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Tiền cọc:</strong>
-                        <span th:text="${#numbers.formatDecimal(hopDong.tienCoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Trạng thái:</strong>
-                        <span th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
-                        <span th:if="${hopDong.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
-                        <span th:if="${hopDong.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
-                    </div>
-                    <div class="col-md-6 mb-3" th:if="${hopDong.ghiChu != null and !hopDong.ghiChu.isEmpty()}">
-                        <strong>Ghi chú:</strong>
-                        <span th:text="${hopDong.ghiChu}"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        
         <!-- Pending Addendum Alert -->
         <div th:if="${pendingPhuLuc != null}" class="card mb-4 border-warning">
             <div class="card-header bg-warning text-dark">
@@ -123,22 +43,464 @@
             </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="d-flex gap-2">
-            <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
-               th:href="@{/tenant/hop-dong/yeu-cau-gia-han/{id}(id=${hopDong.hopDongId})}"
-               class="btn btn-success">
-                <i class="bi bi-calendar-plus me-1"></i>Yêu cầu gia hạn
-            </a>
-            <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
-               th:href="@{/tenant/hop-dong/yeu-cau-cham-dut/{id}(id=${hopDong.hopDongId})}"
-               class="btn btn-danger">
-                <i class="bi bi-x-circle me-1"></i>Yêu cầu chấm dứt
-            </a>
-            <a th:href="@{/tenant/hop-dong}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Quay lại
-            </a>
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>Chi tiết Hợp đồng #<span th:text="${hopDong.hopDongId}"></span></h2>
+            <div>
+                <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
+                   th:href="@{/tenant/hop-dong/yeu-cau-gia-han/{id}(id=${hopDong.hopDongId})}"
+                   class="btn btn-success">
+                    <i class="bi bi-calendar-plus me-1"></i>Yêu cầu gia hạn
+                </a>
+                <a th:if="${hopDong.trangThai.name() != 'DA_CHAM_DUT'}"
+                   th:href="@{/tenant/hop-dong/yeu-cau-cham-dut/{id}(id=${hopDong.hopDongId})}"
+                   class="btn btn-danger">
+                    <i class="bi bi-x-circle me-1"></i>Yêu cầu chấm dứt
+                </a>
+                <a th:href="@{/tenant/hop-dong}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
         </div>
+
+        <div class="row">
+            <!-- ==================== CỘT TRÁI: THÔNG TIN TÓM TẮT ==================== -->
+            <div class="col-lg-5 mb-4">
+
+                <!-- Thông tin chủ trọ -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Thông tin Bên cho thuê (Bên A)</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width:35%">Họ tên:</th>
+                                <td class="fw-semibold" th:text="${chuTro?.hoTen ?: 'N/A'}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Email:</th>
+                                <td th:text="${chuTro?.email ?: 'N/A'}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">SĐT:</th>
+                                <td th:text="${chuTro?.sdt ?: 'Chưa cập nhật'}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">CCCD:</th>
+                                <td th:text="${chuTro?.cccd ?: 'Chưa cập nhật'}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Thông tin khách thuê -->
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="bi bi-person me-2"></i>Thông tin Bên thuê (Bên B)</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width:35%">Họ tên:</th>
+                                <td class="fw-semibold" th:text="${khachThue.hoTen}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Email:</th>
+                                <td th:text="${khachThue.email}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">SĐT:</th>
+                                <td th:text="${khachThue.sdt ?: 'Chưa cập nhật'}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">CCCD:</th>
+                                <td th:text="${khachThue.cccd ?: 'Chưa cập nhật'}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Giá & Thời Hạn -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-calendar-range me-2"></i>Chi tiết hợp đồng</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th class="text-muted" style="width:35%">Khu trọ:</th>
+                                <td class="fw-semibold" th:text="${hopDong.phongTro.khuTro.tenKhu}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Phòng số:</th>
+                                <td class="fw-semibold" th:text="${hopDong.phongTro.soPhong}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Ngày bắt đầu:</th>
+                                <td th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Ngày kết thúc:</th>
+                                <td>
+                                    <span th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></span>
+                                    <span th:if="${remainingDays != null && remainingDays > 0}" class="badge bg-info ms-2">
+                                        Còn <span th:text="${remainingDays}"></span> ngày
+                                    </span>
+                                    <span th:if="${remainingDays != null && remainingDays <= 0 && hopDong.trangThai.name() != 'DA_CHAM_DUT'}" class="badge bg-danger ms-2">
+                                        Đã hết hạn
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Giá thuê:</th>
+                                <td>
+                                    <span class="fw-bold text-danger fs-5"
+                                          th:if="${giaThueInfo == null}"
+                                          th:text="${#numbers.formatDecimal(hopDong.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                    <span class="fw-bold text-danger fs-5"
+                                          th:if="${giaThueInfo != null}"
+                                          th:text="${#numbers.formatDecimal(giaThueInfo['giaHienTai'], 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Tiền cọc:</th>
+                                <td class="fw-bold text-primary"
+                                    th:text="${hopDong.tienCoc != null ? #numbers.formatDecimal(hopDong.tienCoc, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Trạng thái:</th>
+                                <td>
+                                    <span th:if="${hopDong.trangThai.name() == 'DANG_HIEU_LUC'}" class="badge bg-primary">Đang hiệu lực</span>
+                                    <span th:if="${hopDong.trangThai.name() == 'SAP_HET_HAN'}" class="badge bg-warning text-dark">Sắp hết hạn</span>
+                                    <span th:if="${hopDong.trangThai.name() == 'DA_CHAM_DUT'}" class="badge bg-secondary">Đã chấm dứt</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${hopDong.ghiChu != null && !hopDong.ghiChu.isEmpty()}">
+                                <th class="text-muted">Ghi chú:</th>
+                                <td th:text="${hopDong.ghiChu}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+             <!-- ==================== CỘT PHẢI: BẢN HỢP ĐỒNG (IN ĐƯỢC) ==================== -->
+            <div class="col-lg-7 mb-4">
+                <div class="card">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Bản hợp đồng</h6>
+                        <button class="btn btn-sm btn-outline-light" onclick="printContract()">
+                            <i class="bi bi-printer me-1"></i>In hợp đồng
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Bản hợp đồng in được -->
+                        <div id="contractPrintArea" class="p-4" style="background:#fff; font-family: 'Times New Roman', serif; color:#000;">
+
+                            <!-- Header -->
+                            <div style="text-align:center; margin-bottom:24px;">
+                                <p style="font-size:14px; margin:0;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+                                <p style="font-size:14px; font-weight:bold; margin:0;">Độc lập - Tự do - Hạnh phúc</p>
+                                <p style="margin:4px 0 0;">————————</p>
+                            </div>
+
+                            <h3 style="text-align:center; font-weight:bold; margin-bottom:8px; font-size:20px;">
+                                HỢP ĐỒNG THUÊ PHÒNG TRỌ
+                            </h3>
+                            <p style="text-align:center; font-style:italic; margin-bottom:24px; font-size:13px;">
+                                <span th:text="'Ngày ' + ${#temporals.format(hopDong.ngayBatDau, 'dd')}
+                                    + ' tháng ' + ${#temporals.format(hopDong.ngayBatDau, 'MM')}
+                                    + ' năm ' + ${#temporals.format(hopDong.ngayBatDau, 'yyyy')}"></span>
+                            </p>
+
+                            <!-- Căn cứ -->
+                            <p style="font-size:13px; margin-bottom:16px;">
+                                Căn cứ Bộ luật Dân sự 2015 và các quy định pháp luật hiện hành, hai bên thỏa thuận ký kết
+                                hợp đồng thuê phòng trọ với các điều khoản sau:
+                            </p>
+
+                            <!-- Bên A -->
+                            <div style="margin-bottom:16px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">
+                                    <u>BÊN A (Bên cho thuê):</u>
+                                </p>
+                                <table style="font-size:13px; width:100%;">
+                                    <tr>
+                                        <td style="width:140px; padding:2px 0;">Ông/Bà:</td>
+                                        <td style="font-weight:bold;" th:text="${chuTro?.hoTen ?: '...........................'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Số CCCD:</td>
+                                        <td th:text="${chuTro?.cccd ?: '...........................'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Số điện thoại:</td>
+                                        <td th:text="${chuTro?.sdt ?: '...........................'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Email:</td>
+                                        <td th:text="${chuTro?.email ?: '...........................'}"></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Bên B -->
+                            <div style="margin-bottom:16px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">
+                                    <u>BÊN B (Bên thuê):</u>
+                                </p>
+                                <table style="font-size:13px; width:100%;">
+                                    <tr>
+                                        <td style="width:140px; padding:2px 0;">Ông/Bà:</td>
+                                        <td style="font-weight:bold;" th:text="${khachThue.hoTen}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Số CCCD:</td>
+                                        <td th:text="${khachThue.cccd ?: '...........................'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Số điện thoại:</td>
+                                        <td th:text="${khachThue.sdt ?: '...........................'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0;">Email:</td>
+                                        <td th:text="${khachThue.email}"></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Điều 1 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">Điều 1: Đối tượng hợp đồng</p>
+                                <p style="font-size:13px; margin:0;">
+                                    Bên A đồng ý cho Bên B thuê 01 phòng trọ tại:
+                                </p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Khu trọ: <strong th:text="${hopDong.phongTro.khuTro.tenKhu}"></strong></li>
+                                    <li>Địa chỉ: <span th:text="${hopDong.phongTro.khuTro.diaChi}"></span></li>
+                                    <li>Phòng số: <strong th:text="${hopDong.phongTro.soPhong}"></strong>
+                                        <span th:if="${hopDong.phongTro.tang != null}" th:text="' - Tầng ' + ${hopDong.phongTro.tang}"></span>
+                                        <span th:if="${hopDong.phongTro.dienTich != null}" th:text="' - Diện tích: ' + ${hopDong.phongTro.dienTich} + ' m²'"></span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Điều 2 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">Điều 2: Thời hạn thuê</p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Thời hạn thuê: từ ngày
+                                        <strong th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')}"></strong>
+                                        đến ngày
+                                        <strong th:text="${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}"></strong>.
+                                    </li>
+                                    <li>Khi hết hạn hợp đồng, nếu Bên B có nhu cầu gia hạn, hai bên sẽ thỏa thuận và ký phụ lục hợp đồng.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Điều 3 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">Điều 3: Giá thuê và phương thức thanh toán</p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Giá thuê phòng:
+                                        <strong th:text="${#numbers.formatDecimal(hopDong.phongTro.giaThue, 0, 'COMMA', 0, 'POINT')} + ' VND/tháng'"></strong>
+                                        <span style="font-style:italic;">
+                                            (Bằng chữ: <span id="giaBangChu"></span>)
+                                        </span>
+                                    </li>
+                                    <li>Tiền cọc:
+                                        <strong th:text="${hopDong.tienCoc != null ? #numbers.formatDecimal(hopDong.tienCoc, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}"></strong>
+                                    </li>
+                                    <li>Tiền thuê được thanh toán vào đầu mỗi tháng, chậm nhất ngày 05 hàng tháng.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Điều 4: Dịch vụ -->
+                            <div style="margin-bottom:14px;" th:if="${danhSachDichVu != null && !danhSachDichVu.isEmpty()}">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">Điều 4: Các dịch vụ kèm theo</p>
+                                <p style="font-size:13px; margin-bottom:4px;">
+                                    Ngoài tiền thuê phòng, Bên B thanh toán thêm các khoản phí dịch vụ sau:
+                                </p>
+                                <table style="font-size:13px; width:100%; border-collapse:collapse; margin:4px 0;">
+                                    <thead>
+                                        <tr style="background:#f0f0f0;">
+                                            <th style="border:1px solid #999; padding:4px 8px; text-align:left;">STT</th>
+                                            <th style="border:1px solid #999; padding:4px 8px; text-align:left;">Dịch vụ</th>
+                                            <th style="border:1px solid #999; padding:4px 8px; text-align:right;">Đơn giá</th>
+                                            <th style="border:1px solid #999; padding:4px 8px; text-align:left;">Đơn vị</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="dv, stat : ${danhSachDichVu}">
+                                            <td style="border:1px solid #999; padding:4px 8px;" th:text="${stat.index + 1}"></td>
+                                            <td style="border:1px solid #999; padding:4px 8px;" th:text="${dv.tenDV}"></td>
+                                            <td style="border:1px solid #999; padding:4px 8px; text-align:right;"
+                                                th:text="${#numbers.formatDecimal(dv.donGia, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                            <td style="border:1px solid #999; padding:4px 8px;" th:text="${dv.donViTinh ?: ''}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Điều 5 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;"
+                                   th:text="${(danhSachDichVu != null && !danhSachDichVu.isEmpty()) ? 'Điều 5: Trách nhiệm của Bên A' : 'Điều 4: Trách nhiệm của Bên A'}">
+                                </p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Giao phòng và trang thiết bị cho Bên B đúng thỏa thuận.</li>
+                                    <li>Đảm bảo quyền sử dụng phòng trọ cho Bên B trong thời gian hợp đồng có hiệu lực.</li>
+                                    <li>Sửa chữa, bảo trì các hư hỏng không do lỗi của Bên B gây ra.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Điều 6 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;"
+                                   th:text="${(danhSachDichVu != null && !danhSachDichVu.isEmpty()) ? 'Điều 6: Trách nhiệm của Bên B' : 'Điều 5: Trách nhiệm của Bên B'}">
+                                </p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Thanh toán tiền thuê và các chi phí phát sinh đúng hạn.</li>
+                                    <li>Giữ gìn tài sản, trang thiết bị trong phòng. Nếu hư hỏng do lỗi Bên B, Bên B phải bồi thường.</li>
+                                    <li>Không được tự ý sửa chữa, cải tạo phòng khi chưa được Bên A đồng ý.</li>
+                                    <li>Chấp hành nội quy khu trọ và quy định pháp luật.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Điều 7 -->
+                            <div style="margin-bottom:14px;">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;"
+                                   th:text="${(danhSachDichVu != null && !danhSachDichVu.isEmpty()) ? 'Điều 7: Điều khoản chung' : 'Điều 6: Điều khoản chung'}">
+                                </p>
+                                <ul style="font-size:13px; margin:4px 0;">
+                                    <li>Hợp đồng này có hiệu lực kể từ ngày ký.</li>
+                                    <li>Hợp đồng được lập thành 02 bản, mỗi bên giữ 01 bản có giá trị như nhau.</li>
+                                    <li>Trong quá trình thực hiện, nếu có phát sinh tranh chấp, hai bên sẽ cùng nhau thỏa thuận giải quyết trên tinh thần hợp tác.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Ghi chú -->
+                            <div style="margin-bottom:20px;" th:if="${hopDong.ghiChu != null && !hopDong.ghiChu.isEmpty()}">
+                                <p style="font-weight:bold; font-size:14px; margin-bottom:6px;">Ghi chú:</p>
+                                <p style="font-size:13px; font-style:italic;" th:text="${hopDong.ghiChu}"></p>
+                            </div>
+
+                            <!-- Chữ ký -->
+                            <div style="margin-top:40px;">
+                                <table style="width:100%; font-size:13px;">
+                                    <tr>
+                                        <td style="width:50%; text-align:center; vertical-align:top;">
+                                            <p style="font-weight:bold; margin-bottom:4px;">BÊN A</p>
+                                            <p style="font-style:italic; margin-bottom:60px;">(Ký, ghi rõ họ tên)</p>
+                                            <p style="font-weight:bold;" th:text="${chuTro?.hoTen ?: ''}"></p>
+                                        </td>
+                                        <td style="width:50%; text-align:center; vertical-align:top;">
+                                            <p style="font-weight:bold; margin-bottom:4px;">BÊN B</p>
+                                            <p style="font-style:italic; margin-bottom:60px;">(Ký, ghi rõ họ tên)</p>
+                                            <p style="font-weight:bold;" th:text="${khachThue.hoTen}"></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div><!-- /contractPrintArea -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Script -->
+        <script th:inline="javascript">
+            // === In hợp đồng ===
+            function printContract() {
+                var printContent = document.getElementById('contractPrintArea').innerHTML;
+                var printWindow = window.open('', '_blank');
+                printWindow.document.write(
+                    '<html><head><title>Hợp đồng thuê phòng trọ</title>' +
+                    '<style>' +
+                    'body { font-family: "Times New Roman", serif; margin: 30px 40px; color: #000; }' +
+                    'table { border-collapse: collapse; }' +
+                    'ul { padding-left: 20px; }' +
+                    'li { margin-bottom: 2px; }' +
+                    '@page { size: A4; margin: 20mm; }' +
+                    '</style></head><body>' +
+                    printContent +
+                    '</body></html>'
+                );
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(function() { printWindow.print(); }, 300);
+            }
+
+            // === Chuyển số sang chữ tiếng Việt ===
+            function docSo(so) {
+                var mangSo = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+                var hangDonVi = ['','nghìn','triệu','tỷ','nghìn tỷ','triệu tỷ'];
+
+                if (so === 0) return 'không đồng';
+
+                var chuoi = '';
+                var nhomSo = [];
+
+                var soStr = String(so);
+                while (soStr.length > 0) {
+                    nhomSo.unshift(soStr.slice(-3));
+                    soStr = soStr.slice(0, -3);
+                }
+
+                for (var i = 0; i < nhomSo.length; i++) {
+                    var nhom = parseInt(nhomSo[i]);
+                    if (nhom === 0) continue;
+
+                    var viTriDonVi = nhomSo.length - 1 - i;
+                    var tram = Math.floor(nhom / 100);
+                    var chuc = Math.floor((nhom % 100) / 10);
+                    var donVi = nhom % 10;
+
+                    var phan = '';
+                    if (tram > 0) {
+                        phan += mangSo[tram] + ' trăm ';
+                    } else if (i > 0 && nhom > 0) {
+                        phan += 'không trăm ';
+                    }
+
+                    if (chuc > 1) {
+                        phan += mangSo[chuc] + ' mươi ';
+                        if (donVi === 1) phan += 'mốt ';
+                        else if (donVi === 5) phan += 'lăm ';
+                        else if (donVi > 0) phan += mangSo[donVi] + ' ';
+                    } else if (chuc === 1) {
+                        phan += 'mười ';
+                        if (donVi === 5) phan += 'lăm ';
+                        else if (donVi > 0) phan += mangSo[donVi] + ' ';
+                    } else if (chuc === 0 && donVi > 0) {
+                        if (tram > 0) phan += 'lẻ ';
+                        phan += mangSo[donVi] + ' ';
+                    }
+
+                    phan += hangDonVi[viTriDonVi] + ' ';
+                    chuoi += phan;
+                }
+
+                chuoi = chuoi.trim();
+                chuoi = chuoi.charAt(0).toUpperCase() + chuoi.slice(1) + ' đồng';
+                return chuoi;
+            }
+
+            (function() {
+                var giaElement = document.getElementById('giaBangChu');
+                if (giaElement) {
+                    var gia = /*[[${hopDong.phongTro.giaThue}]]*/ 0;
+                    gia = parseInt(gia);
+                    if (!isNaN(gia)) {
+                        giaElement.textContent = docSo(gia);
+                    }
+                }
+            })();
+        </script>
 
     </div>
 </div>

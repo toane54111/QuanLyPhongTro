@@ -11,6 +11,9 @@ import com.nhatro.quanlynhatro.service.NguoiDungService;
 import com.nhatro.quanlynhatro.service.PhuLucHopDongService;
 import com.nhatro.quanlynhatro.service.YeuCauChamDutService;
 import com.nhatro.quanlynhatro.service.YeuCauGiaHanService;
+import com.nhatro.quanlynhatro.service.DichVuService;
+import com.nhatro.quanlynhatro.repository.NguoiDungRepository;
+import com.nhatro.quanlynhatro.enums.VaiTro;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
@@ -21,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,8 @@ public class TenantHopDongController {
     private final YeuCauGiaHanService yeuCauGiaHanService;
     private final YeuCauChamDutService yeuCauChamDutService;
     private final PhuLucHopDongService phuLucHopDongService;
+    private final DichVuService dichVuService;
+    private final NguoiDungRepository nguoiDungRepository;
 
     private NguoiDung getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -78,6 +84,17 @@ public class TenantHopDongController {
 
             model.addAttribute("hopDong", hopDong);
             model.addAttribute("nguoiDung", currentUser);
+
+            long remainingDays = ChronoUnit.DAYS.between(LocalDate.now(), hopDong.getNgayKetThuc());
+            model.addAttribute("remainingDays", remainingDays);
+
+            // Fetch landlord (assume first one) and all services for the printable contract
+            model.addAttribute("danhSachDichVu", dichVuService.findAll());
+            List<NguoiDung> chuTros = nguoiDungRepository.findByVaiTro(VaiTro.CHU_TRO);
+            if (!chuTros.isEmpty()) {
+                model.addAttribute("chuTro", chuTros.get(0));
+            }
+            model.addAttribute("khachThue", currentUser);
 
             // Thông tin giá thuê hiện tại (có tính phụ lục)
             model.addAttribute("giaThueInfo", phuLucHopDongService.getThongTinGiaThue(hopDong.getHopDongId()));

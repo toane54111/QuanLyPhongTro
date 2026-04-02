@@ -91,12 +91,26 @@
                                 <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                             </tr>
                             <tr>
-                                <td>Tiền điện</td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                <td>
+                                    Tiền điện
+                                    <div th:if="${chiSo != null}" class="text-muted small mt-1">
+                                        (Cũ: <span th:text="${chiSo.dienCu}"></span> - 
+                                        Mới: <span th:text="${chiSo.dienMoi}"></span> = 
+                                        <span th:text="${chiSo.dienMoi - chiSo.dienCu}"></span> kWh)
+                                    </div>
+                                </td>
+                                <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                             </tr>
                             <tr>
-                                <td>Tiền nước</td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                <td>
+                                    Tiền nước
+                                    <div th:if="${chiSo != null}" class="text-muted small mt-1">
+                                        (Cũ: <span th:text="${chiSo.nuocCu}"></span> - 
+                                        Mới: <span th:text="${chiSo.nuocMoi}"></span> = 
+                                        <span th:text="${chiSo.nuocMoi - chiSo.nuocCu}"></span> m³)
+                                    </div>
+                                </td>
+                                <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                             </tr>
                             <tr>
                                 <td>Phí dịch vụ</td>

@@ -7,6 +7,8 @@ import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
 import com.nhatro.quanlynhatro.service.DichVuService;
 import com.nhatro.quanlynhatro.service.HoaDonService;
 import com.nhatro.quanlynhatro.service.NguoiDungService;
+import com.nhatro.quanlynhatro.service.ChiSoDienNuocService;
+import com.nhatro.quanlynhatro.entity.ChiSoDienNuoc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,8 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/tenant/hoa-don")
@@ -28,6 +32,7 @@ public class TenantHoaDonController {
     private final NguoiDungService nguoiDungService;
     private final HoaDonService hoaDonService;
     private final DichVuService dichVuService;
+    private final ChiSoDienNuocService chiSoDienNuocService;
 
     private NguoiDung getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -61,6 +66,13 @@ public class TenantHoaDonController {
             List<GiaoDich> lichSuGD = hoaDonService.getLichSuGiaoDichByKhachThue(userId);
             List<GiaoDich> lichSuGDGanDay = lichSuGD.size() > 10 ? lichSuGD.subList(0, 10) : lichSuGD;
 
+            Map<Long, ChiSoDienNuoc> chiSoMap = new HashMap<>();
+            for (HoaDon hd : allHoaDons) {
+                chiSoDienNuocService.findByPhongIdAndKyGhi(hd.getHopDong().getPhongTro().getPhongId(), hd.getKyThanhToan())
+                        .ifPresent(cs -> chiSoMap.put(hd.getHoaDonId(), cs));
+            }
+
+            model.addAttribute("chiSoMap", chiSoMap);
             model.addAttribute("danhSachDichVu", dichVuService.findAll());
             model.addAttribute("nguoiDung", currentUser);
             model.addAttribute("hoaDons", allHoaDons);
@@ -93,6 +105,9 @@ public class TenantHoaDonController {
             }
 
             List<GiaoDich> giaoDichs = hoaDonService.findGiaoDichByHoaDonId(id);
+
+            chiSoDienNuocService.findByPhongIdAndKyGhi(hoaDon.getHopDong().getPhongTro().getPhongId(), hoaDon.getKyThanhToan())
+                    .ifPresent(cs -> model.addAttribute("chiSo", cs));
 
             model.addAttribute("hoaDon", hoaDon);
             model.addAttribute("giaoDichs", giaoDichs);

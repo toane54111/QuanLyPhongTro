@@ -93,13 +93,29 @@
                                 </tr>
                                 <tr>
                                     <td><i class="bi bi-lightning text-warning me-2"></i>Tiền điện</td>
-                                    <td class="text-muted small">Theo chỉ số công tơ</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                    <td class="text-muted small">
+                                        <span th:if="${chiSo != null}">
+                                            Số cũ: <strong th:text="${chiSo.dienCu}"></strong> -
+                                            Số mới: <strong th:text="${chiSo.dienMoi}"></strong>
+                                            <br>Tương đương sử dụng:
+                                            <strong class="text-dark" th:text="${chiSo.dienMoi - chiSo.dienCu}"></strong> kWh
+                                        </span>
+                                        <span th:if="${chiSo == null}">Theo chỉ số công tơ</span>
+                                    </td>
+                                    <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                 </tr>
                                 <tr>
                                     <td><i class="bi bi-droplet text-info me-2"></i>Tiền nước</td>
-                                    <td class="text-muted small">Theo chỉ số đồng hồ nước</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                    <td class="text-muted small">
+                                        <span th:if="${chiSo != null}">
+                                            Số cũ: <strong th:text="${chiSo.nuocCu}"></strong> -
+                                            Số mới: <strong th:text="${chiSo.nuocMoi}"></strong>
+                                            <br>Tương đương sử dụng:
+                                            <strong class="text-dark" th:text="${chiSo.nuocMoi - chiSo.nuocCu}"></strong> m³
+                                        </span>
+                                        <span th:if="${chiSo == null}">Theo chỉ số đồng hồ nước</span>
+                                    </td>
+                                    <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                 </tr>
                                 <tr>
                                     <td><i class="bi bi-gear text-secondary me-2"></i>Phí dịch vụ khác</td>

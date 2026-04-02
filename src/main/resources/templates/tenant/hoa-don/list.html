@@ -140,12 +140,26 @@
                                     <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                 </tr>
                                 <tr>
-                                    <td><i class="bi bi-lightning me-2 text-warning"></i>Tiền điện</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                    <td>
+                                        <i class="bi bi-lightning me-2 text-warning"></i>Tiền điện
+                                        <div th:if="${chiSoMap[hd.hoaDonId] != null}" class="text-muted small ms-4">
+                                            (Cũ: <span th:text="${chiSoMap[hd.hoaDonId].dienCu}"></span> - 
+                                            Mới: <span th:text="${chiSoMap[hd.hoaDonId].dienMoi}"></span> = 
+                                            <span th:text="${chiSoMap[hd.hoaDonId].dienMoi - chiSoMap[hd.hoaDonId].dienCu}"></span> kWh)
+                                        </div>
+                                    </td>
+                                    <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                 </tr>
                                 <tr>
-                                    <td><i class="bi bi-droplet me-2 text-info"></i>Tiền nước</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                                    <td>
+                                        <i class="bi bi-droplet me-2 text-info"></i>Tiền nước
+                                        <div th:if="${chiSoMap[hd.hoaDonId] != null}" class="text-muted small ms-4">
+                                            (Cũ: <span th:text="${chiSoMap[hd.hoaDonId].nuocCu}"></span> - 
+                                            Mới: <span th:text="${chiSoMap[hd.hoaDonId].nuocMoi}"></span> = 
+                                            <span th:text="${chiSoMap[hd.hoaDonId].nuocMoi - chiSoMap[hd.hoaDonId].nuocCu}"></span> m³)
+                                        </div>
+                                    </td>
+                                    <td class="text-end align-middle" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
                                 </tr>
                                 <tr>
                                     <td><i class="bi bi-gear me-2 text-secondary"></i>Phí dịch vụ khác</td>
@@ -286,8 +300,14 @@
                                         <td th:text="${hd.hopDong.phongTro.soPhong}"></td>
                                         <td th:text="${hd.kyThanhToan}"></td>
                                         <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienPhong, 0, 'COMMA', 0, 'POINT')}"></td>
-                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')}"></td>
-                                        <td class="text-end" th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')}"></td>
+                                        <td class="text-end">
+                                            <span th:text="${#numbers.formatDecimal(hd.tienDien, 0, 'COMMA', 0, 'POINT')}"></span>
+                                            <br><small class="text-muted" th:if="${chiSoMap[hd.hoaDonId] != null}" th:text="'(' + ${chiSoMap[hd.hoaDonId].dienMoi - chiSoMap[hd.hoaDonId].dienCu} + ' kWh)'"></small>
+                                        </td>
+                                        <td class="text-end">
+                                            <span th:text="${#numbers.formatDecimal(hd.tienNuoc, 0, 'COMMA', 0, 'POINT')}"></span>
+                                            <br><small class="text-muted" th:if="${chiSoMap[hd.hoaDonId] != null}" th:text="'(' + ${chiSoMap[hd.hoaDonId].nuocMoi - chiSoMap[hd.hoaDonId].nuocCu} + ' m³)'"></small>
+                                        </td>
                                         <td class="text-end" th:text="${#numbers.formatDecimal(hd.phiDichVu, 0, 'COMMA', 0, 'POINT')}"></td>
                                         <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')}"></td>
                                         <td>
