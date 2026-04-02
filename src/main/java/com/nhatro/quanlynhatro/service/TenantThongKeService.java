@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -177,19 +178,16 @@ public class TenantThongKeService {
                         quaHanData.add(0);
                     }
                     case CHUA_THANH_TOAN, THANH_TOAN_MOT_PHAN -> {
+                        boolean quaHan = hoaDon.getHanThanhToan() != null
+                                && hoaDon.getHanThanhToan().isBefore(LocalDate.now());
                         daThanhToanData.add(0);
-                        chuaThanhToanData.add(1);
-                        quaHanData.add(0);
-                    }
-                    case QUA_HAN -> {
-                        daThanhToanData.add(0);
-                        chuaThanhToanData.add(0);
-                        quaHanData.add(1);
-                    }
-                    default -> {
-                        daThanhToanData.add(0);
-                        chuaThanhToanData.add(1);
-                        quaHanData.add(0);
+                        if (quaHan) {
+                            chuaThanhToanData.add(0);
+                            quaHanData.add(1);
+                        } else {
+                            chuaThanhToanData.add(1);
+                            quaHanData.add(0);
+                        }
                     }
                 }
             } else {
