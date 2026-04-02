@@ -79,6 +79,18 @@
                                 <th class="text-muted">Ghi chú xử lý</th>
                                 <td th:text="${yeuCauSuCo.ghiChuXuLy != null ? yeuCauSuCo.ghiChuXuLy : 'Chưa có'}"></td>
                             </tr>
+                            <tr th:if="${yeuCauSuCo.hinhAnh != null and !yeuCauSuCo.hinhAnh.isEmpty()}">
+                                <th class="text-muted">Hình ảnh</th>
+                                <td>
+                                    <div class="mt-2 d-flex flex-wrap gap-2">
+                                        <th:block th:each="img : ${#strings.arraySplit(yeuCauSuCo.hinhAnh, ',')}">
+                                            <a th:href="${img}" target="_blank">
+                                                <img th:src="${img}" alt="Ảnh đính kèm" class="img-thumbnail shadow-sm" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                            </a>
+                                        </th:block>
+                                    </div>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>
@@ -90,28 +102,35 @@
                     <div class="card-header">
                         <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Cập nhật trạng thái</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" th:if="${yeuCauSuCo.trangThai.name() == 'DA_XONG'}">
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle-fill me-2"></i> Sự cố này đã được xử lý xong hoàn tất.
+                        </div>
+                    </div>
+                    <div class="card-body" th:if="${yeuCauSuCo.trangThai.name() != 'DA_XONG'}">
                         <form th:action="@{/landlord/su-co/update-status/{id}(id=${yeuCauSuCo.ticketId})}" method="post">
                             <div class="mb-3">
-                                <label for="trangThai" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                <select class="form-select" id="trangThai" name="trangThai" required>
-                                    <option th:each="tt : ${trangThaiSuCos}"
-                                            th:value="${tt}"
-                                            th:selected="${yeuCauSuCo.trangThai == tt}"
-                                            th:text="${tt.name() == 'MOI' ? 'Mới' :
-                                                (tt.name() == 'DA_TIEP_NHAN' ? 'Đã tiếp nhận' :
-                                                (tt.name() == 'DANG_SUA' ? 'Đang sửa' : 'Đã xong'))}">
-                                    </option>
-                                </select>
+                                <label class="form-label">Bước tiếp theo <span class="text-danger">*</span></label>
+                                <!-- Deterministic next state -->
+                                <input type="hidden" name="trangThai" 
+                                       th:value="${yeuCauSuCo.trangThai.name() == 'MOI' ? 'DA_TIEP_NHAN' :
+                                                 (yeuCauSuCo.trangThai.name() == 'DA_TIEP_NHAN' ? 'DANG_SUA' : 'DA_XONG')}">
+                                <div class="form-control bg-light cursor-not-allowed">
+                                    <i class="bi bi-arrow-right-circle me-2 text-primary"></i>
+                                    <strong class="text-primary" 
+                                        th:text="${yeuCauSuCo.trangThai.name() == 'MOI' ? 'Đã tiếp nhận' :
+                                                (yeuCauSuCo.trangThai.name() == 'DA_TIEP_NHAN' ? 'Đang sửa' : 'Đã xong')}">
+                                    </strong>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="ghiChuXuLy" class="form-label">Ghi chú xử lý</label>
                                 <textarea class="form-control" id="ghiChuXuLy" name="ghiChuXuLy"
-                                          rows="4" placeholder="Nhập ghi chú xử lý..."
+                                          rows="4" placeholder="Nhập cập nhật ghi chú..."
                                           th:text="${yeuCauSuCo.ghiChuXuLy}"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-1"></i>Cập nhật
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-arrow-right-square me-1"></i> Cập nhật trạng thái
                             </button>
                         </form>
                     </div>

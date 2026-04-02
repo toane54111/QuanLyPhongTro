@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS yeu_cau_su_co (
     khach_thue_id   BIGINT      NOT NULL,
     loai_su_co      VARCHAR(50) NULL,
     mo_ta           TEXT        NOT NULL,
-    hinh_anh        VARCHAR(500) NULL,
+    hinh_anh        TEXT NULL,
     muc_do_uu_tien  ENUM('THAP','TRUNG_BINH','CAO') NULL DEFAULT 'TRUNG_BINH'
                                 COMMENT 'THAP | TRUNG_BINH | CAO',
     trang_thai      ENUM('MOI','DA_TIEP_NHAN','DANG_SUA','DA_XONG') NOT NULL DEFAULT 'MOI'

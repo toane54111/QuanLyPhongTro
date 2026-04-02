@@ -43,7 +43,7 @@
                 <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Thông tin sự cố</h5>
             </div>
             <div class="card-body">
-                <form th:action="@{/tenant/su-co/create}" method="post">
+                <form th:action="@{/tenant/su-co/create}" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="loaiSuCo" class="form-label">Loại sự cố <span class="text-danger">*</span></label>
                         <select class="form-select" id="loaiSuCo" name="loaiSuCo" required>
@@ -71,9 +71,9 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="hinhAnh" class="form-label">Link hình ảnh (nếu có)</label>
-                        <input type="text" class="form-control" id="hinhAnh" name="hinhAnh"
-                               placeholder="Nhập URL hình ảnh minh họa">
+                        <label for="hinhAnh" class="form-label">Hình ảnh đính kèm (nếu có)</label>
+                        <input type="file" class="form-control" id="hinhAnh" name="fileImages" accept="image/*" multiple onchange="previewImages(event)">
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3"></div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -87,6 +87,29 @@
             </div>
         </div>
 
+        <!-- Script for immediate image preview -->
+        <script>
+            function previewImages(event) {
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                previewContainer.innerHTML = '';
+                
+                if (event.target.files) {
+                    Array.from(event.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'img-thumbnail';
+                            img.style.maxWidth = '150px';
+                            img.style.maxHeight = '150px';
+                            img.style.objectFit = 'cover';
+                            previewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            }
+        </script>
     </div>
 </div>
 </body>

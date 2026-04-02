@@ -60,10 +60,12 @@
                     </div>
                     <div class="col-12 mb-3" th:if="${suCo.hinhAnh != null and !suCo.hinhAnh.isEmpty()}">
                         <strong>Hình ảnh:</strong>
-                        <div class="mt-1">
-                            <a th:href="${suCo.hinhAnh}" target="_blank" class="text-primary">
-                                <i class="bi bi-image me-1"></i>Xem hình ảnh
-                            </a>
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <th:block th:each="img : ${#strings.arraySplit(suCo.hinhAnh, ',')}">
+                                <a th:href="${img}" target="_blank">
+                                    <img th:src="${img}" alt="Ảnh đính kèm" class="img-thumbnail shadow-sm" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                </a>
+                            </th:block>
                         </div>
                     </div>
                     <div class="col-12" th:if="${suCo.ghiChuXuLy != null and !suCo.ghiChuXuLy.isEmpty()}">
