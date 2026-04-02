@@ -29,16 +29,19 @@ public class YeuCauSuCo {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String moTa;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String hinhAnh;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private MucDoUuTien mucDoUuTien = MucDoUuTien.TRUNG_BINH;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TrangThaiSuCo trangThai = TrangThaiSuCo.MOI;
 
+    @Builder.Default
     private LocalDateTime ngayTao = LocalDateTime.now();
 
     @Column(columnDefinition = "TEXT")

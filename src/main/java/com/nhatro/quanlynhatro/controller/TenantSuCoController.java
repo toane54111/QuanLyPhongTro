@@ -75,7 +75,7 @@ public class TenantSuCoController {
     @PostMapping("/create")
     public String create(@RequestParam String loaiSuCo,
                          @RequestParam String moTa,
-                         @RequestParam(required = false) String hinhAnh,
+                         @RequestParam(value = "fileImages", required = false) java.util.List<org.springframework.web.multipart.MultipartFile> fileImages,
                          @RequestParam(required = false) String mucDoUuTien,
                          RedirectAttributes redirectAttributes) {
         try {
@@ -93,12 +93,32 @@ public class TenantSuCoController {
                 }
             }
 
+            java.util.List<String> hinhAnhPaths = new java.util.ArrayList<>();
+            if (fileImages != null && !fileImages.isEmpty()) {
+                for (org.springframework.web.multipart.MultipartFile fileImage : fileImages) {
+                    if (fileImage != null && !fileImage.isEmpty()) {
+                        String fileName = org.springframework.util.StringUtils.cleanPath(fileImage.getOriginalFilename());
+                        fileName = System.currentTimeMillis() + "_" + fileName;
+                        String uploadDir = "./uploads";
+                        try {
+                            com.nhatro.quanlynhatro.utils.FileUploadUtil.saveFile(uploadDir, fileName, fileImage);
+                            hinhAnhPaths.add("/uploads/" + fileName);
+                        } catch (java.io.IOException e) {
+                            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải ảnh lên: " + e.getMessage());
+                            return "redirect:/tenant/su-co/create";
+                        }
+                    }
+                }
+            }
+            
+            String finalHinhAnhPath = hinhAnhPaths.isEmpty() ? null : String.join(",", hinhAnhPaths);
+
             YeuCauSuCo suCo = YeuCauSuCo.builder()
                     .phongTro(activeContract.getPhongTro())
                     .khachThue(currentUser)
                     .loaiSuCo(loaiSuCo)
                     .moTa(moTa)
-                    .hinhAnh(hinhAnh)
+                    .hinhAnh(finalHinhAnhPath)
                     .mucDoUuTien(mucDo)
                     .trangThai(TrangThaiSuCo.MOI)
                     .ngayTao(LocalDateTime.now())
