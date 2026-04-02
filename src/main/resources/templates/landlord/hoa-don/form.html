@@ -25,10 +25,11 @@
             <div class="card-body">
                 <form th:action="@{/landlord/hoa-don/create}" method="post" th:object="${hoaDon}">
 
+                    <!-- 1. Chọn hợp đồng + kỳ thanh toán -->
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Hợp đồng <span class="text-danger">*</span></label>
-                            <select name="hopDongId" class="form-select" required>
+                            <select name="hopDongId" id="hopDongId" class="form-select" required>
                                 <option value="">-- Chọn hợp đồng --</option>
                                 <option th:each="hd : ${danhSachHopDong}"
                                         th:value="${hd.hopDongId}"
@@ -36,27 +37,96 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Kỳ thanh toán <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="kyThanhToan"
-                                   placeholder="YYYY-MM" required>
+                            <input type="month" class="form-control" name="kyThanhToan" th:max="${currentMonth}" required>
                         </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Hạn thanh toán</label>
                             <input type="date" class="form-control" th:field="*{hanThanhToan}">
                         </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Tiền phòng, tiền điện, tiền nước sẽ được tính tự động dựa trên hợp đồng và chỉ số điện nước.
+                    <hr>
+
+                    <!-- 2. Chỉ số Điện -->
+                    <h5 class="mb-3"><i class="bi bi-lightning-charge me-1 text-warning"></i>Chỉ số Điện</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Điện cũ (kWh) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="dienCu" id="dienCu"
+                                   required min="0" value="0" readonly
+                                   style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Điện mới (kWh) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="dienMoi" id="dienMoi"
+                                   required min="0" value="0">
+                        </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
+                    <hr>
+
+                    <!-- 3. Chỉ số Nước -->
+                    <h5 class="mb-3"><i class="bi bi-droplet me-1 text-info"></i>Chỉ số Nước</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nước cũ (m<sup>3</sup>) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="nuocCu" id="nuocCu"
+                                   required min="0" value="0" readonly
+                                   style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nước mới (m<sup>3</sup>) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="nuocMoi" id="nuocMoi"
+                                   required min="0" value="0">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 4. Chi tiết dự kiến -->
+                    <h5 class="mb-3"><i class="bi bi-calculator me-1 text-success"></i>Chi tiết hóa đơn</h5>
+                    <div id="previewSpinner" class="text-center d-none my-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tính toán...</span>
+                        </div>
+                    </div>
+                    <div id="previewError" class="alert alert-danger d-none"></div>
+                    <div id="previewContent" class="card bg-light mb-3 d-none">
+                        <div class="card-body py-2">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-muted">Tiền phòng</td>
+                                        <td class="text-end fw-bold" id="previewTienPhong">0 đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Tiền điện (<span id="previewTieuThuDien">0</span> kWh)</td>
+                                        <td class="text-end fw-bold" id="previewTienDien">0 đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Tiền nước (<span id="previewTieuThuNuoc">0</span> khối)</td>
+                                        <td class="text-end fw-bold" id="previewTienNuoc">0 đ</td>
+                                    </tr>
+                                    <tr class="border-bottom">
+                                        <td class="text-muted">
+                                            Phí dịch vụ khác 
+                                            <div id="previewDichVuKhac" class="small text-secondary mt-1" style="font-size: 0.8rem;"></div>
+                                        </td>
+                                        <td class="text-end fw-bold" id="previewPhiDichVu">0 đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fs-5 fw-bold text-primary pt-2">Tổng cộng</td>
+                                        <td class="fs-5 fw-bold text-primary text-end pt-2" id="previewTongTien">0 đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn btn-primary" onclick="confirmCreate()">
                             <i class="bi bi-check-circle me-1"></i>Lập hóa đơn
                         </button>
                         <a th:href="@{/landlord/hoa-don}" class="btn btn-secondary">
@@ -69,5 +139,134 @@
 
     </div>
 </div>
+
+<!-- Script autofill chỉ số cũ khi chọn hợp đồng -->
+<script th:inline="javascript">
+    (function() {
+        // Map hopDongId → phongId
+        var hopDongPhongMap = /*[[${hopDongPhongMap}]]*/ {};
+        // Map phongId → { dienMoi, nuocMoi } từ chỉ số gần nhất
+        var latestReadings = /*[[${latestReadings}]]*/ {};
+
+        var selectHD = document.getElementById('hopDongId');
+        var dienCuInput = document.getElementById('dienCu');
+        var nuocCuInput = document.getElementById('nuocCu');
+        var dienMoiInput = document.getElementById('dienMoi');
+        var nuocMoiInput = document.getElementById('nuocMoi');
+
+        if (selectHD) {
+            selectHD.addEventListener('change', function() {
+                var hopDongId = this.value;
+                var phongId = hopDongPhongMap[hopDongId];
+
+                if (phongId && latestReadings[phongId]) {
+                    var dien = latestReadings[phongId].dienMoi;
+                    var nuoc = latestReadings[phongId].nuocMoi;
+                    dienCuInput.value = dien;
+                    nuocCuInput.value = nuoc;
+                    // Đặt min cho chỉ số mới
+                    dienMoiInput.min = dien;
+                    nuocMoiInput.min = nuoc;
+                    dienMoiInput.value = dien;
+                    nuocMoiInput.value = nuoc;
+                } else {
+                    dienCuInput.value = 0;
+                    nuocCuInput.value = 0;
+                    dienMoiInput.min = 0;
+                    nuocMoiInput.min = 0;
+                    dienMoiInput.value = 0;
+                    nuocMoiInput.value = 0;
+                }
+                updatePreview();
+            });
+        }
+
+        var kyThanhToanInput = document.querySelector('input[name="kyThanhToan"]');
+        
+        function updatePreview() {
+            var hopDongId = selectHD.value;
+            var kyTT = kyThanhToanInput.value;
+            var dCu = dienCuInput.value || 0;
+            var dMoi = dienMoiInput.value || 0;
+            var nCu = nuocCuInput.value || 0;
+            var nMoi = nuocMoiInput.value || 0;
+
+            if (!hopDongId || !kyTT) {
+                document.getElementById('previewContent').classList.add('d-none');
+                document.getElementById('previewError').classList.add('d-none');
+                return;
+            }
+            
+            // Basic logic: only call API if values are valid relative to each other
+            if (parseInt(dMoi) < parseInt(dCu) || parseInt(nMoi) < parseInt(nCu)) {
+                document.getElementById('previewContent').classList.add('d-none');
+                return; 
+            }
+
+            document.getElementById('previewSpinner').classList.remove('d-none');
+            document.getElementById('previewError').classList.add('d-none');
+            document.getElementById('previewContent').classList.add('d-none');
+            
+            fetch('/landlord/hoa-don/api/preview?hopDongId=' + hopDongId + '&kyThanhToan=' + kyTT + '&dienCu=' + dCu + '&dienMoi=' + dMoi + '&nuocCu=' + nCu + '&nuocMoi=' + nMoi)
+                .then(function(res) { return res.json().then(function(data) { return {status: res.status, body: data}; }); })
+                .then(function(res) {
+                    document.getElementById('previewSpinner').classList.add('d-none');
+                    if (res.status !== 200) {
+                        document.getElementById('previewError').innerText = res.body.error || 'Có lỗi xảy ra khi tính toán';
+                        document.getElementById('previewError').classList.remove('d-none');
+                        return;
+                    }
+                    
+                    var data = res.body;
+                    var formatVND = function(val) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val); };
+                    
+                    document.getElementById('previewTienPhong').innerText = formatVND(data.tienPhong);
+                    document.getElementById('previewTieuThuDien').innerText = data.tieuThuDien;
+                    
+                    var giaDienHtml = formatVND(data.tienDien) + ' <span class="fw-normal text-muted small">(' + formatVND(data.donGiaDien) + '/kWh)</span>';
+                    document.getElementById('previewTienDien').innerHTML = giaDienHtml;
+                    
+                    document.getElementById('previewTieuThuNuoc').innerText = data.tieuThuNuoc;
+                    
+                    var giaNuocHtml = formatVND(data.tienNuoc) + ' <span class="fw-normal text-muted small">(' + formatVND(data.donGiaNuoc) + '/khối)</span>';
+                    document.getElementById('previewTienNuoc').innerHTML = giaNuocHtml;
+                    
+                    document.getElementById('previewPhiDichVu').innerText = formatVND(data.phiDichVu);
+                    document.getElementById('previewTongTien').innerText = formatVND(data.tongTien);
+                    
+                    var dvHtml = '';
+                    if (data.cacDichVuKhac && data.cacDichVuKhac.length > 0) {
+                        dvHtml = data.cacDichVuKhac.map(function(dv) { return '• ' + dv.tenDV + ': ' + formatVND(dv.donGia); }).join('<br>');
+                    } else {
+                        dvHtml = 'Không có';
+                    }
+                    document.getElementById('previewDichVuKhac').innerHTML = dvHtml;
+                    
+                    document.getElementById('previewContent').classList.remove('d-none');
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    document.getElementById('previewSpinner').classList.add('d-none');
+                });
+        }
+
+        if (selectHD) selectHD.addEventListener('change', updatePreview);
+        if (kyThanhToanInput) kyThanhToanInput.addEventListener('change', updatePreview);
+        if (dienMoiInput) dienMoiInput.addEventListener('input', updatePreview);
+        if (nuocMoiInput) nuocMoiInput.addEventListener('input', updatePreview);
+
+        window.confirmCreate = function() {
+            var form = document.querySelector('form');
+            if(form.reportValidity()) {
+                var hopDong = selectHD.options[selectHD.selectedIndex].text;
+                var kiTT = kyThanhToanInput.value;
+                if(confirm('Bạn có chắc chắn muốn tạo hóa đơn cho ' + hopDong + ' kỳ [' + kiTT + '] không?')) {
+                    form.submit();
+                }
+            }
+        }
+    })();
+</script>
+
 </body>
 </html>

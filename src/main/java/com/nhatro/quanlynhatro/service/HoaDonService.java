@@ -116,6 +116,115 @@ public class HoaDonService {
         return giaoDichRepository.findByKhachThueOrderByNgayDesc(khachThueId);
     }
 
+    /**
+     * Tạo hóa đơn kèm ghi chỉ số điện nước (gộp 2 bước thành 1).
+     * 1. Validate + lưu chi_so_dien_nuoc
+     * 2. Tạo hóa đơn dựa trên chi_so vừa lưu
+     */
+    @Transactional
+    public HoaDon createWithChiSo(HoaDon hoaDon, Long hopDongId, String kyThanhToan,
+                                   int dienCu, int dienMoi, int nuocCu, int nuocMoi) {
+        YearMonth kyTT = YearMonth.parse(kyThanhToan);
+        if (kyTT.isAfter(YearMonth.now())) {
+            throw new RuntimeException("Không thể lập hóa đơn cho kỳ thanh toán trong tương lai");
+        }
+
+        HopDong hopDong = hopDongRepository.findById(hopDongId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng với ID: " + hopDongId));
+
+        Long phongId = hopDong.getPhongTro().getPhongId();
+
+        // Validate chỉ số
+        if (dienMoi < dienCu) {
+            throw new RuntimeException("Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện cũ");
+        }
+        if (nuocMoi < nuocCu) {
+            throw new RuntimeException("Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước cũ");
+        }
+
+        // Tạo hoặc cập nhật chi_so_dien_nuoc
+        Optional<ChiSoDienNuoc> existingChiSo = chiSoDienNuocRepository
+                .findByPhongTro_PhongIdAndKyGhi(phongId, kyThanhToan);
+
+        ChiSoDienNuoc chiSo;
+        if (existingChiSo.isPresent()) {
+            chiSo = existingChiSo.get();
+        } else {
+            chiSo = new ChiSoDienNuoc();
+            chiSo.setPhongTro(hopDong.getPhongTro());
+            chiSo.setKyGhi(kyThanhToan);
+        }
+        chiSo.setDienCu(dienCu);
+        chiSo.setDienMoi(dienMoi);
+        chiSo.setNuocCu(nuocCu);
+        chiSo.setNuocMoi(nuocMoi);
+        chiSo.setNgayGhi(LocalDate.now());
+        chiSoDienNuocRepository.save(chiSo);
+
+        // Tạo hóa đơn (sẽ tự đọc chi_so vừa lưu để tính tiền)
+        return create(hoaDon, hopDongId, kyThanhToan);
+    }
+
+    /**
+     * Lấy dữ liệu xem trước hóa đơn (cho ajax frontend)
+     */
+    public Map<String, Object> previewSingleInvoice(Long hopDongId, String kyThanhToan, int dienCu, int dienMoi, int nuocCu, int nuocMoi) {
+        HopDong hopDong = hopDongRepository.findById(hopDongId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng"));
+
+        BigDecimal tienPhong = getGiaThueHieuLuc(hopDong, kyThanhToan);
+
+        int tieuThuDien = Math.max(0, dienMoi - dienCu);
+        int tieuThuNuoc = Math.max(0, nuocMoi - nuocCu);
+
+        BigDecimal tienDien = BigDecimal.ZERO;
+        BigDecimal tienNuoc = BigDecimal.ZERO;
+        BigDecimal donGiaDien = BigDecimal.ZERO;
+        BigDecimal donGiaNuoc = BigDecimal.ZERO;
+
+        Optional<DichVu> dienDV = dichVuRepository.findByTenDV("Điện");
+        if (dienDV.isPresent()) {
+            donGiaDien = dienDV.get().getDonGia();
+            tienDien = donGiaDien.multiply(BigDecimal.valueOf(tieuThuDien));
+        }
+
+        Optional<DichVu> nuocDV = dichVuRepository.findByTenDV("Nước");
+        if (nuocDV.isPresent()) {
+            donGiaNuoc = nuocDV.get().getDonGia();
+            tienNuoc = donGiaNuoc.multiply(BigDecimal.valueOf(tieuThuNuoc));
+        }
+
+        BigDecimal phiDichVu = BigDecimal.ZERO;
+        List<Map<String, Object>> cacDichVuKhac = new ArrayList<>();
+
+        List<DichVu> allServices = dichVuRepository.findAll();
+        for (DichVu dv : allServices) {
+            if (!"Điện".equals(dv.getTenDV()) && !"Nước".equals(dv.getTenDV())) {
+                phiDichVu = phiDichVu.add(dv.getDonGia());
+                Map<String, Object> dvMap = new HashMap<>();
+                dvMap.put("tenDV", dv.getTenDV());
+                dvMap.put("donGia", dv.getDonGia());
+                cacDichVuKhac.add(dvMap);
+            }
+        }
+
+        BigDecimal tongTien = tienPhong.add(tienDien).add(tienNuoc).add(phiDichVu);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("tienPhong", tienPhong);
+        result.put("tienDien", tienDien);
+        result.put("tienNuoc", tienNuoc);
+        result.put("phiDichVu", phiDichVu);
+        result.put("tongTien", tongTien);
+        result.put("donGiaDien", donGiaDien);
+        result.put("donGiaNuoc", donGiaNuoc);
+        result.put("tieuThuDien", tieuThuDien);
+        result.put("tieuThuNuoc", tieuThuNuoc);
+        result.put("cacDichVuKhac", cacDichVuKhac);
+
+        return result;
+    }
+
     @Transactional
     public HoaDon create(HoaDon hoaDon, Long hopDongId, String kyThanhToan) {
         if (hoaDonRepository.existsByHopDong_HopDongIdAndKyThanhToan(hopDongId, kyThanhToan)) {
@@ -334,6 +443,11 @@ public class HoaDonService {
      * Trả về danh sách Map chứa thông tin dự kiến cho từng phòng
      */
     public List<Map<String, Object>> previewBatchInvoices(String kyThanhToan) {
+        YearMonth kyTT = YearMonth.parse(kyThanhToan);
+        if (kyTT.isAfter(YearMonth.now())) {
+            throw new RuntimeException("Không thể lập hóa đơn cho kỳ thanh toán trong tương lai");
+        }
+
         List<HopDong> activeContracts = hopDongRepository.findByTrangThai(
                 com.nhatro.quanlynhatro.enums.TrangThaiHopDong.DANG_HIEU_LUC);
         List<Map<String, Object>> previews = new ArrayList<>();
@@ -394,6 +508,11 @@ public class HoaDonService {
      */
     @Transactional
     public int createBatchInvoices(String kyThanhToan, LocalDate hanThanhToan) {
+        YearMonth kyTT = YearMonth.parse(kyThanhToan);
+        if (kyTT.isAfter(YearMonth.now())) {
+            throw new RuntimeException("Không thể lập hóa đơn cho kỳ thanh toán trong tương lai");
+        }
+
         List<HopDong> activeContracts = hopDongRepository.findByTrangThai(
                 com.nhatro.quanlynhatro.enums.TrangThaiHopDong.DANG_HIEU_LUC);
         int count = 0;

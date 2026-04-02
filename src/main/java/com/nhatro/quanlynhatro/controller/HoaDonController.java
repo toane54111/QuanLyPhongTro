@@ -1,11 +1,13 @@
 package com.nhatro.quanlynhatro.controller;
 
+import com.nhatro.quanlynhatro.entity.ChiSoDienNuoc;
 import com.nhatro.quanlynhatro.entity.GiaoDich;
 import com.nhatro.quanlynhatro.entity.HoaDon;
 import com.nhatro.quanlynhatro.enums.PhuongThucThanhToan;
 import com.nhatro.quanlynhatro.enums.TrangThaiGiaoDich;
 import com.nhatro.quanlynhatro.enums.TrangThaiHoaDon;
 import com.nhatro.quanlynhatro.entity.HopDong;
+import com.nhatro.quanlynhatro.service.ChiSoDienNuocService;
 import com.nhatro.quanlynhatro.service.HoaDonService;
 import com.nhatro.quanlynhatro.service.HopDongService;
 import com.nhatro.quanlynhatro.service.ThongBaoService;
@@ -14,11 +16,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.time.YearMonth;
+import java.util.*;
 
 @Controller
 @RequestMapping("/landlord/hoa-don")
@@ -28,6 +31,7 @@ public class HoaDonController {
     private final HoaDonService hoaDonService;
     private final HopDongService hopDongService;
     private final ThongBaoService thongBaoService;
+    private final ChiSoDienNuocService chiSoDienNuocService;
 
     @GetMapping
     public String list(@RequestParam(required = false) TrangThaiHoaDon trangThai,
@@ -50,7 +54,31 @@ public class HoaDonController {
     public String showCreateForm(Model model) {
         try {
             model.addAttribute("hoaDon", new HoaDon());
-            model.addAttribute("danhSachHopDong", hopDongService.findActiveContracts());
+            List<HopDong> danhSachHopDong = hopDongService.findActiveContracts();
+            model.addAttribute("danhSachHopDong", danhSachHopDong);
+            model.addAttribute("currentMonth", YearMonth.now().toString());
+
+            // Build map hopDongId → phongId để JS map từ hợp đồng sang phòng
+            Map<Long, Long> hopDongPhongMap = new HashMap<>();
+            // Build map phongId → { dienMoi, nuocMoi } từ chỉ số gần nhất
+            Map<Long, Map<String, Integer>> latestReadings = new HashMap<>();
+
+            for (HopDong hd : danhSachHopDong) {
+                Long phongId = hd.getPhongTro().getPhongId();
+                hopDongPhongMap.put(hd.getHopDongId(), phongId);
+
+                if (!latestReadings.containsKey(phongId)) {
+                    Optional<ChiSoDienNuoc> latest = chiSoDienNuocService.getLatestByPhongId(phongId);
+                    if (latest.isPresent()) {
+                        Map<String, Integer> data = new HashMap<>();
+                        data.put("dienMoi", latest.get().getDienMoi());
+                        data.put("nuocMoi", latest.get().getNuocMoi());
+                        latestReadings.put(phongId, data);
+                    }
+                }
+            }
+            model.addAttribute("hopDongPhongMap", hopDongPhongMap);
+            model.addAttribute("latestReadings", latestReadings);
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải form tạo hóa đơn: " + e.getMessage());
         }
@@ -61,9 +89,13 @@ public class HoaDonController {
     public String create(@ModelAttribute HoaDon hoaDon,
                          @RequestParam Long hopDongId,
                          @RequestParam String kyThanhToan,
+                         @RequestParam int dienCu,
+                         @RequestParam int dienMoi,
+                         @RequestParam int nuocCu,
+                         @RequestParam int nuocMoi,
                          RedirectAttributes redirectAttributes) {
         try {
-            hoaDonService.create(hoaDon, hopDongId, kyThanhToan);
+            hoaDonService.createWithChiSo(hoaDon, hopDongId, kyThanhToan, dienCu, dienMoi, nuocCu, nuocMoi);
             redirectAttributes.addFlashAttribute("success", "Tạo hóa đơn thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi tạo hóa đơn: " + e.getMessage());
@@ -71,10 +103,30 @@ public class HoaDonController {
         return "redirect:/landlord/hoa-don";
     }
 
+    @GetMapping("/api/preview")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> previewSingle(
+            @RequestParam Long hopDongId,
+            @RequestParam String kyThanhToan,
+            @RequestParam int dienCu,
+            @RequestParam int dienMoi,
+            @RequestParam int nuocCu,
+            @RequestParam int nuocMoi) {
+        try {
+            Map<String, Object> result = hoaDonService.previewSingleInvoice(hopDongId, kyThanhToan, dienCu, dienMoi, nuocCu, nuocMoi);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
     // === LẬP HÓA ĐƠN HÀNG LOẠT (UC13 theo Activity Diagram) ===
 
     @GetMapping("/batch")
     public String showBatchForm(Model model) {
+        model.addAttribute("currentMonth", YearMonth.now().toString());
         return "landlord/hoa-don/batch-form";
     }
 

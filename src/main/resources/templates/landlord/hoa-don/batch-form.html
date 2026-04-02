@@ -22,7 +22,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Kỳ thanh toán <span class="text-danger">*</span></label>
-                            <input type="month" class="form-control" name="kyThanhToan" required>
+                            <input type="month" class="form-control" name="kyThanhToan" th:max="${currentMonth}" required>
                             <small class="form-text text-muted">Chọn tháng/năm cần lập hóa đơn</small>
                         </div>
                         <div class="col-md-6">
