@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "chi_so_dien_nuoc", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"phong_id", "kyGhi"})
+    @UniqueConstraint(columnNames = {"phong_id", "ky_ghi"})
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ChiSoDienNuoc {

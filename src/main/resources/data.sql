@@ -5,12 +5,10 @@
 
 -- ============================================================
 -- 1. TÀI KHOẢN MẪU
--- Mật khẩu mã hóa BCrypt cho "123456"
+-- Mật khẩu: 123456 (BCrypt hash được tạo bởi DataInitializer)
+-- Không insert mật khẩu ở đây vì BCrypt hash phải được
+-- tạo tại runtime bởi PasswordEncoder trong DataInitializer
 -- ============================================================
-INSERT IGNORE INTO nguoi_dung (user_id, ho_ten, email, mat_khau, sdt, cccd, vai_tro, trang_thai)
-VALUES
-    (1, 'Nguyễn Văn Chủ', 'chutro@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '0901234567', '012345678901', 'CHU_TRO', 'HOAT_DONG'),
-    (2, 'Trần Thị Khách', 't@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '0912345678', '012345678902', 'KHACH_THUE', 'HOAT_DONG');
 
 -- ============================================================
 -- 2. KHU TRỌ MẪU

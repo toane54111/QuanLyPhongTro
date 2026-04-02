@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS nguoi_dung (
     mat_khau    VARCHAR(255)    NOT NULL,
     sdt         VARCHAR(15)     NULL,
     cccd        VARCHAR(12)     NULL,
-    vai_tro     VARCHAR(20)     NOT NULL COMMENT 'CHU_TRO | KHACH_THUE',
-    trang_thai  VARCHAR(20)     NOT NULL DEFAULT 'HOAT_DONG' COMMENT 'HOAT_DONG | BI_KHOA',
+    vai_tro     ENUM('CHU_TRO','KHACH_THUE') NOT NULL COMMENT 'CHU_TRO | KHACH_THUE',
+    trang_thai  ENUM('HOAT_DONG','BI_KHOA') NOT NULL DEFAULT 'HOAT_DONG' COMMENT 'HOAT_DONG | BI_KHOA',
     ngay_tao    DATETIME        NULL DEFAULT CURRENT_TIMESTAMP,
     so_lan_sai_mat_khau INT     NOT NULL DEFAULT 0,
 
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS phong_tro (
     tang        INT             NULL,
     dien_tich   FLOAT           NULL,
     gia_thue    DECIMAL(12,0)   NULL,
-    trang_thai  VARCHAR(20)     NOT NULL DEFAULT 'TRONG' COMMENT 'TRONG | DA_THUE | BAO_TRI',
+    trang_thai  ENUM('TRONG','DA_THUE','BAO_TRI') NOT NULL DEFAULT 'TRONG' COMMENT 'TRONG | DA_THUE | BAO_TRI',
     mo_ta       TEXT            NULL,
 
     PRIMARY KEY (phong_id),
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS hop_dong (
     ngay_ket_thuc   DATE        NOT NULL,
     gia_thue        DECIMAL(12,0) NOT NULL,
     tien_coc        DECIMAL(12,0) NOT NULL,
-    trang_thai      VARCHAR(20) NOT NULL DEFAULT 'DANG_HIEU_LUC'
+    trang_thai      ENUM('DANG_HIEU_LUC','SAP_HET_HAN','DA_CHAM_DUT') NOT NULL DEFAULT 'DANG_HIEU_LUC'
                                 COMMENT 'DANG_HIEU_LUC | SAP_HET_HAN | DA_CHAM_DUT',
     ghi_chu         TEXT        NULL,
 
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS phu_luc_hop_dong (
     gia_thue_mmoi   DECIMAL(12,0) NOT NULL COMMENT 'Giá thuê mới',
     ngay_ket_thuc_moi DATE      NOT NULL COMMENT 'Ngày kết thúc mới',
     ngay_hieu_luc   DATE        NULL COMMENT 'Ngày khách duyệt phụ lục',
-    trang_thai      VARCHAR(20) NOT NULL DEFAULT 'CHO_PHE_DUYET'
+    trang_thai      ENUM('CHO_PHE_DUYET','DA_PHE_DUYET','DA_TU_CHOI') NOT NULL DEFAULT 'CHO_PHE_DUYET'
                                 COMMENT 'CHO_PHE_DUYET | DA_PHE_DUYET | DA_TU_CHOI',
     ghi_chu         TEXT        NULL,
     ngay_tao        DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS hoa_don (
     phi_dich_vu     DECIMAL(12,0) NULL,
     tong_tien       DECIMAL(12,0) NOT NULL,
     han_thanh_toan  DATE        NULL,
-    trang_thai      VARCHAR(30) NOT NULL DEFAULT 'CHUA_THANH_TOAN'
+    trang_thai      ENUM('CHUA_THANH_TOAN','DA_THANH_TOAN','THANH_TOAN_MOT_PHAN') NOT NULL DEFAULT 'CHUA_THANH_TOAN'
                                 COMMENT 'CHUA_THANH_TOAN | THANH_TOAN_MOT_PHAN | DA_THANH_TOAN',
     ngay_tao        DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -211,7 +211,7 @@ CREATE TABLE IF NOT EXISTS giao_dich (
     giao_dich_id    BIGINT      NOT NULL AUTO_INCREMENT,
     hoa_don_id      BIGINT      NULL,
     so_tien         DECIMAL(12,0) NOT NULL,
-    phuong_thuc     VARCHAR(20) NOT NULL COMMENT 'TIEN_MAT | CHUYEN_KHOAN | ONLINE',
+    phuong_thuc     ENUM('TIEN_MAT','CHUYEN_KHOAN','ONLINE') NOT NULL COMMENT 'TIEN_MAT | CHUYEN_KHOAN | ONLINE',
     trang_thaigd    VARCHAR(50) NULL DEFAULT 'DA_XAC_NHAN'
                                 COMMENT 'CHO_XAC_NHAN | DA_XAC_NHAN | DA_HUY',
     ngay_giao_dich  DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
@@ -253,9 +253,9 @@ CREATE TABLE IF NOT EXISTS yeu_cau_su_co (
     loai_su_co      VARCHAR(50) NULL,
     mo_ta           TEXT        NOT NULL,
     hinh_anh        VARCHAR(500) NULL,
-    muc_do_uu_tien  VARCHAR(20) NULL DEFAULT 'TRUNG_BINH'
+    muc_do_uu_tien  ENUM('THAP','TRUNG_BINH','CAO') NULL DEFAULT 'TRUNG_BINH'
                                 COMMENT 'THAP | TRUNG_BINH | CAO',
-    trang_thai      VARCHAR(20) NOT NULL DEFAULT 'MOI'
+    trang_thai      ENUM('MOI','DA_TIEP_NHAN','DANG_SUA','DA_XONG') NOT NULL DEFAULT 'MOI'
                                 COMMENT 'MOI | DA_TIEP_NHAN | DANG_SUA | DA_XONG',
     ngay_tao        DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
     ghi_chu_xu_ly   TEXT        NULL,
@@ -279,7 +279,7 @@ CREATE TABLE IF NOT EXISTS yeu_cau_gia_han (
     hop_dong_id     BIGINT      NOT NULL,
     thoi_gian_gia_han INT       NOT NULL COMMENT 'Số tháng gia hạn',
     ghi_chu         TEXT        NULL,
-    trang_thai      VARCHAR(20) NOT NULL DEFAULT 'CHO_PHE_DUYET'
+    trang_thai      ENUM('CHO_PHE_DUYET','DA_PHE_DUYET','DA_TU_CHOI') NOT NULL DEFAULT 'CHO_PHE_DUYET'
                                 COMMENT 'CHO_PHE_DUYET | DA_PHE_DUYET | DA_TU_CHOI',
     ngay_tao        DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
     ly_do_tu_choi   VARCHAR(255) NULL,
@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS yeu_cau_cham_dut (
     hop_dong_id     BIGINT      NOT NULL,
     ngay_du_kien_tra DATE       NOT NULL COMMENT 'Ngày dự kiến trả phòng',
     ly_do           TEXT        NULL,
-    trang_thai      VARCHAR(20) NOT NULL DEFAULT 'CHO_PHE_DUYET'
+    trang_thai      ENUM('CHO_PHE_DUYET','DA_PHE_DUYET','DA_TU_CHOI') NOT NULL DEFAULT 'CHO_PHE_DUYET'
                                 COMMENT 'CHO_PHE_DUYET | DA_PHE_DUYET | DA_TU_CHOI',
     ngay_tao        DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
     ly_do_tu_choi   VARCHAR(255) NULL,

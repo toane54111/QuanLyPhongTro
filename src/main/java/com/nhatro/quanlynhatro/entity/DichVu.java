@@ -13,7 +13,7 @@ public class DichVu {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dichVuId;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "ten_dv", nullable = false, unique = true, length = 50)
     private String tenDV;
 
     @Column(nullable = false, precision = 12, scale = 2)

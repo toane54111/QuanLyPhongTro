@@ -21,7 +21,7 @@ public class PhuLucHopDong {
     private HopDong hopDong;
 
     // Giá thuê mới (thay đổi so với hợp đồng gốc)
-    @Column(nullable = false, precision = 12, scale = 0)
+    @Column(name = "gia_thue_mmoi", nullable = false, precision = 12, scale = 0)
     private BigDecimal giaThueMMoi;
 
     // Ngày kết thúc mới

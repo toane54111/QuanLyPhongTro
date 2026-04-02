@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "phong_tro", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"khu_tro_id", "soPhong"})
+    @UniqueConstraint(columnNames = {"khu_tro_id", "so_phong"})
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class PhongTro {
