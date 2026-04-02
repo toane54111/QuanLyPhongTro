@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Thống kê</title>
-</head>
+<head><title>Thống kê cá nhân</title></head>
 <body>
-<div th:replace="~{layout/main :: layout(title='Thống kê', content=~{::mainContent})}">
+<div th:replace="~{layout/main :: layout(title='Thống kê cá nhân', content=~{::mainContent})}">
     <div th:fragment="mainContent">
 
         <!-- Alert khi khong co hop dong -->
@@ -22,191 +20,10 @@
                     <h2><i class="bi bi-bar-chart-line me-2"></i>Thống kê cá nhân</h2>
                     <p class="text-muted mb-0">Phòng <span th:text="${soPhong}">P101</span></p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted small">Xem:</span>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary active" data-so-thang="3">3 tháng</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-so-thang="6">6 tháng</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-so-thang="12">12 tháng</button>
-                    </div>
-                </div>
             </div>
 
-            <!-- ========== A. THONG KE DIEN ========== -->
-            <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-lightning me-2"></i>A. Thống kê điện</h5>
-
-            <!-- Chi so thang hien tai - Dien -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
-                                <i class="bi bi-lightbulb"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value" th:text="${chiSoHienTai['dienTieuThu']} ?: 0">0</div>
-                                <div class="stat-label">kWh tiêu thụ (T)</div>
-                                <div class="small">
-                                    <span th:classappend="${ptThayDoiDien != null && ptThayDoiDien > 0} ? 'text-danger' : (${ptThayDoiDien != null && ptThayDoiDien < 0} ? 'text-success' : 'text-muted')">
-                                        <i th:if="${ptThayDoiDien != null && ptThayDoiDien > 0}" class="bi bi-arrow-up"></i>
-                                        <i th:if="${ptThayDoiDien != null && ptThayDoiDien < 0}" class="bi bi-arrow-down"></i>
-                                        <span th:text="${#numbers.formatDecimal(ptThayDoiDien, 1, 'COMMA', 1, 'POINT')}">0</span>%
-                                    </span>
-                                    <span class="text-muted">so tháng trước</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted small">Chỉ số đầu kỳ</span>
-                                <span class="fw-bold" th:text="${chiSoHienTai['dienCu']} ?: 0">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted small">Chỉ số cuối kỳ</span>
-                                <span class="fw-bold" th:text="${chiSoHienTai['dienMoi']} ?: 0">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted small">Đơn giá</span>
-                                <span class="fw-bold text-primary" th:text="${#numbers.formatDecimal(chiSoHienTai['donGiaDien'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3">
-                                <i class="bi bi-currency-dollar"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value text-danger" th:text="${#numbers.formatDecimal(chiSoHienTai['tienDien'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
-                                <div class="stat-label">Tiền điện tháng này</div>
-                                <div class="small">
-                                    <span th:classappend="${ptThayDoiTienDien != null && ptThayDoiTienDien > 0} ? 'text-danger' : (${ptThayDoiTienDien != null && ptThayDoiTienDien < 0} ? 'text-success' : 'text-muted')">
-                                        <i th:if="${ptThayDoiTienDien != null && ptThayDoiTienDien > 0}" class="bi bi-arrow-up"></i>
-                                        <i th:if="${ptThayDoiTienDien != null && ptThayDoiTienDien < 0}" class="bi bi-arrow-down"></i>
-                                        <span th:text="${#numbers.formatDecimal(ptThayDoiTienDien, 1, 'COMMA', 1, 'POINT')}">0</span>%
-                                    </span>
-                                    <span class="text-muted">so tháng trước</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card bg-primary bg-opacity-10 border-primary">
-                        <div class="card-body text-center">
-                            <div class="stat-label text-primary mb-1">Đơn giá điện</div>
-                            <div class="stat-value text-primary" th:text="${#numbers.formatDecimal(chiSoHienTai['donGiaDien'], 0, 'COMMA', 0, 'POINT')} + ' đ/kWh'">0 đ/kWh</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bieu do dien -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Biểu đồ tiêu thụ điện theo tháng</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="dienChart" height="100"></canvas>
-                </div>
-            </div>
-
-            <!-- ========== B. THONG KE NUOC ========== -->
-            <h5 class="fw-bold mb-3 text-info"><i class="bi bi-water me-2"></i>B. Thống kê nước</h5>
-
-            <!-- Chi so thang hien tai - Nuoc -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
-                                <i class="bi bi-droplet"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value" th:text="${chiSoHienTai['nuocTieuThu']} ?: 0">0</div>
-                                <div class="stat-label">m³ tiêu thụ</div>
-                                <div class="small">
-                                    <span th:classappend="${ptThayDoiNuoc != null && ptThayDoiNuoc > 0} ? 'text-danger' : (${ptThayDoiNuoc != null && ptThayDoiNuoc < 0} ? 'text-success' : 'text-muted')">
-                                        <i th:if="${ptThayDoiNuoc != null && ptThayDoiNuoc > 0}" class="bi bi-arrow-up"></i>
-                                        <i th:if="${ptThayDoiNuoc != null && ptThayDoiNuoc < 0}" class="bi bi-arrow-down"></i>
-                                        <span th:text="${#numbers.formatDecimal(ptThayDoiNuoc, 1, 'COMMA', 1, 'POINT')}">0</span>%
-                                    </span>
-                                    <span class="text-muted">so tháng trước</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted small">Chỉ số đầu kỳ</span>
-                                <span class="fw-bold" th:text="${chiSoHienTai['nuocCu']} ?: 0">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted small">Chỉ số cuối kỳ</span>
-                                <span class="fw-bold" th:text="${chiSoHienTai['nuocMoi']} ?: 0">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted small">Đơn giá</span>
-                                <span class="fw-bold text-info" th:text="${#numbers.formatDecimal(chiSoHienTai['donGiaNuoc'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
-                                <i class="bi bi-currency-dollar"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value text-primary" th:text="${#numbers.formatDecimal(chiSoHienTai['tienNuoc'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
-                                <div class="stat-label">Tiền nước tháng này</div>
-                                <div class="small">
-                                    <span th:classappend="${ptThayDoiTienNuoc != null && ptThayDoiTienNuoc > 0} ? 'text-danger' : (${ptThayDoiTienNuoc != null && ptThayDoiTienNuoc < 0} ? 'text-success' : 'text-muted')">
-                                        <i th:if="${ptThayDoiTienNuoc != null && ptThayDoiTienNuoc > 0}" class="bi bi-arrow-up"></i>
-                                        <i th:if="${ptThayDoiTienNuoc != null && ptThayDoiTienNuoc < 0}" class="bi bi-arrow-down"></i>
-                                        <span th:text="${#numbers.formatDecimal(ptThayDoiTienNuoc, 1, 'COMMA', 1, 'POINT')}">0</span>%
-                                    </span>
-                                    <span class="text-muted">so tháng trước</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card bg-info bg-opacity-10 border-info">
-                        <div class="card-body text-center">
-                            <div class="stat-label text-info mb-1">Đơn giá nước</div>
-                            <div class="stat-value text-info" th:text="${#numbers.formatDecimal(chiSoHienTai['donGiaNuoc'], 0, 'COMMA', 0, 'POINT')} + ' đ/m³'">0 đ/m³</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bieu do nuoc -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Biểu đồ tiêu thụ nước theo tháng</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="nuocChart" height="100"></canvas>
-                </div>
-            </div>
-
-            <!-- ========== C. THONG KE HOA DON ========== -->
-            <h5 class="fw-bold mb-3 text-success"><i class="bi bi-receipt me-2"></i>C. Thống kê tiền phòng & Hóa đơn</h5>
-
-            <!-- Tong quan tai chinh -->
-            <div class="row g-3 mb-4">
+            <!-- ========== PHAN 1: SUMMARY CARDS ========== -->
+            <div class="row g-3 mb-4" id="summaryCards">
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body d-flex align-items-center">
@@ -214,8 +31,8 @@
                                 <i class="bi bi-check-circle"></i>
                             </div>
                             <div>
-                                <div class="stat-value text-success" th:text="${#numbers.formatDecimal(taiChinh['tongDaThanhToan'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
-                                <div class="stat-label">Đã thanh toán</div>
+                                <div class="stat-value text-success" id="tongDaThanhToan">--</div>
+                                <div class="stat-label">Tổng đã thanh toán</div>
                             </div>
                         </div>
                     </div>
@@ -227,7 +44,7 @@
                                 <i class="bi bi-exclamation-circle"></i>
                             </div>
                             <div>
-                                <div class="stat-value text-danger" th:text="${#numbers.formatDecimal(taiChinh['tongConNo'], 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
+                                <div class="stat-value text-danger" id="tongConNo">--</div>
                                 <div class="stat-label">Còn nợ</div>
                             </div>
                         </div>
@@ -236,12 +53,12 @@
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
-                                <i class="bi bi-file-earmark-text"></i>
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                                <i class="bi bi-lightning"></i>
                             </div>
                             <div>
-                                <div class="stat-value" th:text="${taiChinh['soHoaDonDaTT']} ?: 0">0</div>
-                                <div class="stat-label">Hóa đơn đã TT</div>
+                                <div class="stat-value" id="tongDien">--</div>
+                                <div class="stat-label">Tổng điện tiêu thụ (kWh)</div>
                             </div>
                         </div>
                     </div>
@@ -249,56 +66,69 @@
                 <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
-                                <i class="bi bi-clock"></i>
+                            <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
+                                <i class="bi bi-droplet"></i>
                             </div>
                             <div>
-                                <div class="stat-value" th:text="${taiChinh['soHoaDonChuaTT']} ?: 0">0</div>
-                                <div class="stat-label">Hóa đơn chưa TT</div>
+                                <div class="stat-value" id="tongNuoc">--</div>
+                                <div class="stat-label">Tổng nước tiêu thụ (m³)</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bieu do hoa don -->
-            <div class="row g-3 mb-4">
-                <div class="col-lg-8">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Tổng tiền hóa đơn theo tháng</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="hoaDonChart" height="150"></canvas>
-                        </div>
+            <!-- ========== PHAN 2: BIEU DO HOA DON ========== -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Tổng tiền hóa đơn theo tháng</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="namChon" class="form-label mb-0">Năm:</label>
+                        <input type="number" class="form-control form-control-sm" id="namChon"
+                               th:value="${namHienTai}" style="width: 100px;" min="2020" max="2099">
+                        <button class="btn btn-sm btn-primary" id="btnLoadChart">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Tải lại
+                        </button>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Tỷ lệ thanh toán</h5>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                            <canvas id="trangThaiChart" height="200"></canvas>
-                        </div>
-                    </div>
+                <div class="card-body">
+                    <canvas id="hoaDonChart" height="100"></canvas>
                 </div>
             </div>
 
-            <!-- Breakdown chi tieu -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Chi tiết chi tiêu theo tháng</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="breakdownChart" height="100"></canvas>
+            <!-- ========== PHAN 3: BANG CHI TIET ========== -->
+            <div class="table-container">
+                <h5 class="fw-bold mb-3"><i class="bi bi-table me-2"></i>Chi tiết từng tháng</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="chiTietTable">
+                        <thead>
+                            <tr>
+                                <th>Tháng</th>
+                                <th>Số cũ điện</th>
+                                <th>Số mới điện</th>
+                                <th>Tiêu thụ (kWh)</th>
+                                <th>Tiền điện</th>
+                                <th>Số cũ nước</th>
+                                <th>Số mới nước</th>
+                                <th>Tiêu thụ (m³)</th>
+                                <th>Tiền nước</th>
+                                <th>Tiền phòng</th>
+                                <th>Tổng</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chiTietBody">
+                            <tr>
+                                <td colspan="12" class="text-center text-muted py-4">
+                                    <i class="bi bi-hourglass-split me-1"></i>Đang tải dữ liệu...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
         </div>
-
-        <!-- Hidden data for JS -->
-        <input type="hidden" id="soThangHienTai" th:value="${param.soThang != null ? param.soThang[0] : 6}">
 
     </div>
 </div>
@@ -308,197 +138,81 @@
 
 <script th:inline="javascript">
 (function() {
-    let dienChart = null;
-    let nuocChart = null;
+    const namHienTai = /*[[${namHienTai}]]*/ 2026;
     let hoaDonChart = null;
-    let trangThaiChart = null;
-    let breakdownChart = null;
-    let currentSoThang = parseInt(document.getElementById('soThangHienTai').value) || 6;
 
-    // Fix: Integer values from Thymeleaf
+    function formatCurrency(num) {
+        if (num === null || num === undefined) return '0';
+        const n = typeof num === 'number' ? num : parseFloat(num) || 0;
+        return new Intl.NumberFormat('vi-VN').format(n);
+    }
+
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '0';
+        const n = typeof num === 'number' ? num : parseFloat(num) || 0;
+        return new Intl.NumberFormat('vi-VN').format(Math.round(n));
+    }
+
     function toNumber(val) {
         if (val === null || val === undefined) return 0;
         if (typeof val === 'number') return val;
-        if (typeof val === 'string') return parseInt(val) || 0;
+        if (typeof val === 'string') return parseFloat(val) || 0;
         return 0;
     }
 
-    // Format currency for display
-    function formatCurrency(num) {
-        return new Intl.NumberFormat('vi-VN').format(num);
+    function getBadgeClass(trangThai) {
+        switch (trangThai) {
+            case 'DA_THANH_TOAN': return 'badge badge-dang-hieu-luc';
+            case 'QUA_HAN': return 'badge badge-da-thue';
+            case 'CHUA_THANH_TOAN': return 'badge badge-chua-tt';
+            case 'THANH_TOAN_MOT_PHAN': return 'badge badge-tt-mot-phan';
+            case 'KHONG_CO': return 'badge bg-secondary';
+            default: return 'badge bg-secondary';
+        }
     }
 
-    // Load all charts
-    function loadAllCharts(soThang) {
-        currentSoThang = soThang;
-        loadDienChart(soThang);
-        loadNuocChart(soThang);
-        loadHoaDonChart(soThang);
-        loadBreakdownChart(soThang);
-        loadTrangThaiChart(soThang);
+    function getBadgeText(trangThai) {
+        switch (trangThai) {
+            case 'DA_THANH_TOAN': return 'Đã thanh toán';
+            case 'QUA_HAN': return 'Quá hạn';
+            case 'CHUA_THANH_TOAN': return 'Chưa thanh toán';
+            case 'THANH_TOAN_MOT_PHAN': return 'Thanh toán 1 phần';
+            case 'KHONG_CO': return 'Không có HD';
+            default: return trangThai;
+        }
     }
 
-    // Chart 1: Dien
-    function loadDienChart(soThang) {
-        fetch('/tenant/thong-ke/api/chi-so?soThang=' + soThang)
+    function loadData(nam) {
+        loadSummary(nam);
+        loadChart(nam);
+        loadTable(nam);
+    }
+
+    function loadSummary(nam) {
+        fetch('/tenant/thong-ke/api/tong-quan?nam=' + nam)
             .then(r => r.json())
             .then(data => {
-                if (dienChart) dienChart.destroy();
-
-                const labels = data.labels || [];
-                const dienData = (data.dienData || []).map(toNumber);
-                const tienDienData = (data.tienDienData || []).map(toNumber);
-
-                const ctx = document.getElementById('dienChart').getContext('2d');
-                dienChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'kWh tiêu thụ',
-                                data: dienData,
-                                backgroundColor: 'rgba(255, 193, 7, 0.7)',
-                                borderColor: 'rgba(255, 193, 7, 1)',
-                                borderWidth: 1,
-                                borderRadius: 4,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Tiền điện (VND)',
-                                data: tienDienData,
-                                type: 'line',
-                                borderColor: 'rgba(220, 53, 69, 1)',
-                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                                borderWidth: 2,
-                                fill: false,
-                                tension: 0.3,
-                                yAxisID: 'y1'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: { position: 'top' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        if (ctx.datasetIndex === 0) {
-                                            return ctx.dataset.label + ': ' + ctx.raw + ' kWh';
-                                        }
-                                        return ctx.dataset.label + ': ' + formatCurrency(ctx.raw) + ' VND';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                position: 'left',
-                                title: { display: true, text: 'kWh' },
-                                beginAtZero: true
-                            },
-                            y1: {
-                                type: 'linear',
-                                position: 'right',
-                                title: { display: true, text: 'Tiền (VND)' },
-                                beginAtZero: true,
-                                grid: { drawOnChartArea: false }
-                            }
-                        }
-                    }
-                });
+                document.getElementById('tongDaThanhToan').textContent = formatCurrency(data.tongDaThanhToan) + ' đ';
+                document.getElementById('tongConNo').textContent = formatCurrency(data.tongConNo) + ' đ';
+                document.getElementById('tongDien').textContent = formatNumber(data.tongDien);
+                document.getElementById('tongNuoc').textContent = formatNumber(data.tongNuoc);
             })
-            .catch(err => console.error('Loi tai dien:', err));
+            .catch(function() {
+                document.getElementById('tongDaThanhToan').textContent = 'Lỗi';
+                document.getElementById('tongConNo').textContent = 'Lỗi';
+                document.getElementById('tongDien').textContent = 'Lỗi';
+                document.getElementById('tongNuoc').textContent = 'Lỗi';
+            });
     }
 
-    // Chart 2: Nuoc
-    function loadNuocChart(soThang) {
-        fetch('/tenant/thong-ke/api/chi-so?soThang=' + soThang)
-            .then(r => r.json())
-            .then(data => {
-                if (nuocChart) nuocChart.destroy();
-
-                const labels = data.labels || [];
-                const nuocData = (data.nuocData || []).map(toNumber);
-                const tienNuocData = (data.tienNuocData || []).map(toNumber);
-
-                const ctx = document.getElementById('nuocChart').getContext('2d');
-                nuocChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'm³ tiêu thụ',
-                                data: nuocData,
-                                backgroundColor: 'rgba(13, 202, 240, 0.7)',
-                                borderColor: 'rgba(13, 202, 240, 1)',
-                                borderWidth: 1,
-                                borderRadius: 4,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Tiền nước (VND)',
-                                data: tienNuocData,
-                                type: 'line',
-                                borderColor: 'rgba(0, 123, 255, 1)',
-                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                                borderWidth: 2,
-                                fill: false,
-                                tension: 0.3,
-                                yAxisID: 'y1'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: { position: 'top' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        if (ctx.datasetIndex === 0) {
-                                            return ctx.dataset.label + ': ' + ctx.raw + ' m³';
-                                        }
-                                        return ctx.dataset.label + ': ' + formatCurrency(ctx.raw) + ' VND';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                position: 'left',
-                                title: { display: true, text: 'm³' },
-                                beginAtZero: true
-                            },
-                            y1: {
-                                type: 'linear',
-                                position: 'right',
-                                title: { display: true, text: 'Tiền (VND)' },
-                                beginAtZero: true,
-                                grid: { drawOnChartArea: false }
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(err => console.error('Loi tai nuoc:', err));
-    }
-
-    // Chart 3: Hoa don
-    function loadHoaDonChart(soThang) {
-        fetch('/tenant/thong-ke/api/hoa-don?soThang=' + soThang)
+    function loadChart(nam) {
+        fetch('/tenant/thong-ke/api/chi-tiet?nam=' + nam)
             .then(r => r.json())
             .then(data => {
                 if (hoaDonChart) hoaDonChart.destroy();
 
                 const labels = data.labels || [];
-                const tongTienData = (data.tongTienData || []).map(toNumber);
+                const revenueData = (data.doanhThuData || []).map(toNumber);
 
                 const ctx = document.getElementById('hoaDonChart').getContext('2d');
                 hoaDonChart = new Chart(ctx, {
@@ -507,9 +221,9 @@
                         labels: labels,
                         datasets: [{
                             label: 'Tổng tiền (VND)',
-                            data: tongTienData,
-                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
-                            borderColor: 'rgba(40, 167, 69, 1)',
+                            data: revenueData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1,
                             borderRadius: 4
                         }]
@@ -517,11 +231,11 @@
                     options: {
                         responsive: true,
                         plugins: {
-                            legend: { display: false },
+                            legend: { display: true, position: 'top' },
                             tooltip: {
                                 callbacks: {
                                     label: function(ctx) {
-                                        return 'Tổng tiền: ' + formatCurrency(ctx.raw) + ' VND';
+                                        return ctx.dataset.label + ': ' + formatCurrency(ctx.raw) + ' VND';
                                     }
                                 }
                             }
@@ -539,155 +253,66 @@
                     }
                 });
             })
-            .catch(err => console.error('Loi tai hoa don:', err));
+            .catch(function(err) {
+                console.error('Loi tai bieu do:', err);
+            });
     }
 
-    // Chart 4: Trang thai (Pie)
-    function loadTrangThaiChart(soThang) {
-        fetch('/tenant/thong-ke/api/hoa-don?soThang=' + soThang)
+    function loadTable(nam) {
+        fetch('/tenant/thong-ke/api/chi-tiet?nam=' + nam)
             .then(r => r.json())
             .then(data => {
-                if (trangThaiChart) trangThaiChart.destroy();
+                const chiTiet = data.chiTiet || [];
+                const tbody = document.getElementById('chiTietBody');
 
-                const daTT = (data.daThanhToanData || []).reduce((a, b) => a + toNumber(b), 0);
-                const chuaTT = (data.chuaThanhToanData || []).reduce((a, b) => a + toNumber(b), 0);
-                const quaHan = (data.quaHanData || []).reduce((a, b) => a + toNumber(b), 0);
-
-                if (daTT === 0 && chuaTT === 0 && quaHan === 0) {
-                    // Show "Khong co du lieu" placeholder
-                    document.getElementById('trangThaiChart').parentElement.innerHTML =
-                        '<div class="text-center text-muted py-5"><i class="bi bi-pie-chart" style="font-size:3rem;"></i><p class="mt-2">Không có dữ liệu</p></div>';
+                if (!chiTiet.length) {
+                    tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-4">Không có dữ liệu</td></tr>';
                     return;
                 }
 
-                const ctx = document.getElementById('trangThaiChart').getContext('2d');
-                trangThaiChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Đã thanh toán', 'Chưa thanh toán', 'Quá hạn'],
-                        datasets: [{
-                            data: [daTT, chuaTT, quaHan],
-                            backgroundColor: [
-                                'rgba(40, 167, 69, 0.8)',
-                                'rgba(255, 193, 7, 0.8)',
-                                'rgba(220, 53, 69, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgba(40, 167, 69, 1)',
-                                'rgba(255, 193, 7, 1)',
-                                'rgba(220, 53, 69, 1)'
-                            ],
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        return ctx.label + ': ' + ctx.raw + ' tháng';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+                var html = '';
+                for (var i = chiTiet.length - 1; i >= 0; i--) {
+                    var t = chiTiet[i];
+                    html += '<tr>';
+                    html += '<td><strong>' + t.thang + '</strong></td>';
+                    html += '<td>' + formatNumber(t.dienCu) + '</td>';
+                    html += '<td>' + formatNumber(t.dienMoi) + '</td>';
+                    html += '<td><strong>' + formatNumber(t.dienTieuThu) + '</strong></td>';
+                    html += '<td class="text-warning fw-medium">' + formatCurrency(t.tienDien) + '</td>';
+                    html += '<td>' + formatNumber(t.nuocCu) + '</td>';
+                    html += '<td>' + formatNumber(t.nuocMoi) + '</td>';
+                    html += '<td><strong>' + formatNumber(t.nuocTieuThu) + '</strong></td>';
+                    html += '<td class="text-info fw-medium">' + formatCurrency(t.tienNuoc) + '</td>';
+                    html += '<td>' + formatCurrency(t.tienPhong) + '</td>';
+                    html += '<td class="fw-bold">' + formatCurrency(t.tongTien) + '</td>';
+                    html += '<td><span class="' + getBadgeClass(t.trangThai) + '">' + getBadgeText(t.trangThai) + '</span></td>';
+                    html += '</tr>';
+                }
+                tbody.innerHTML = html;
             })
-            .catch(err => console.error('Loi tai trang thai:', err));
+            .catch(function(err) {
+                document.getElementById('chiTietBody').innerHTML =
+                    '<tr><td colspan="12" class="text-center text-danger py-4">Lỗi khi tải dữ liệu</td></tr>';
+                console.error('Loi tai bang:', err);
+            });
     }
 
-    // Chart 5: Breakdown (stacked bar)
-    function loadBreakdownChart(soThang) {
-        fetch('/tenant/thong-ke/api/hoa-don?soThang=' + soThang)
-            .then(r => r.json())
-            .then(data => {
-                if (breakdownChart) breakdownChart.destroy();
+    // Load on page load
+    loadData(namHienTai);
 
-                const labels = data.labels || [];
-                const tienPhong = (data.tienPhongData || []).map(toNumber);
-                const tienDien = (data.tienDienData || []).map(toNumber);
-                const tienNuoc = (data.tienNuocData || []).map(toNumber);
-                const phiDV = (data.phiDichVuData || []).map(toNumber);
-
-                const ctx = document.getElementById('breakdownChart').getContext('2d');
-                breakdownChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Tiền phòng',
-                                data: tienPhong,
-                                backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                                borderColor: 'rgba(13, 110, 253, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Tiền điện',
-                                data: tienDien,
-                                backgroundColor: 'rgba(255, 193, 7, 0.8)',
-                                borderColor: 'rgba(255, 193, 7, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Tiền nước',
-                                data: tienNuoc,
-                                backgroundColor: 'rgba(13, 202, 240, 0.8)',
-                                borderColor: 'rgba(13, 202, 240, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Phí dịch vụ',
-                                data: phiDV,
-                                backgroundColor: 'rgba(108, 117, 125, 0.8)',
-                                borderColor: 'rgba(108, 117, 125, 1)',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        return ctx.dataset.label + ': ' + formatCurrency(ctx.raw) + ' VND';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { stacked: true },
-                            y: {
-                                stacked: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(err => console.error('Loi tai breakdown:', err));
-    }
-
-    // Button group event
-    document.querySelectorAll('[data-so-thang]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('[data-so-thang]').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            loadAllCharts(parseInt(this.dataset.soThang));
-        });
+    // Reload on button click
+    document.getElementById('btnLoadChart').addEventListener('click', function() {
+        var nam = document.getElementById('namChon').value;
+        loadData(nam);
     });
 
-    // Initial load
-    loadAllCharts(currentSoThang);
-
+    // Reload on Enter key
+    document.getElementById('namChon').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loadData(this.value);
+        }
+    });
 })();
 </script>
 </body>

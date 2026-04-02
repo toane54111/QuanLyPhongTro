@@ -289,4 +289,144 @@ public class TenantThongKeService {
                 .multiply(BigDecimal.valueOf(100))
                 .setScale(1, java.math.RoundingMode.HALF_UP);
     }
+
+    /**
+     * Lay tong quan tai chinh theo nam (cho summary cards)
+     */
+    public Map<String, Object> getTongQuanTheoNam(Long khachThueId, Long phongId, int nam) {
+        Map<String, Object> result = new HashMap<>();
+
+        BigDecimal tongDaThanhToan = BigDecimal.ZERO;
+        BigDecimal tongConNo = BigDecimal.ZERO;
+        BigDecimal tongDien = BigDecimal.ZERO;
+        BigDecimal tongNuoc = BigDecimal.ZERO;
+        BigDecimal tongTienDien = BigDecimal.ZERO;
+        BigDecimal tongTienNuoc = BigDecimal.ZERO;
+        int soHoaDonDaTT = 0;
+        int soHoaDonChuaTT = 0;
+        int soHoaDonQuaHan = 0;
+
+        for (int month = 1; month <= 12; month++) {
+            String ky = String.format("%d-%02d", nam, month);
+
+            // Tong dien / nuoc tieu thu tu chi so
+            Optional<ChiSoDienNuoc> chiSoOpt = chiSoDienNuocRepository.findByPhongTro_PhongIdAndKyGhi(phongId, ky);
+            if (chiSoOpt.isPresent()) {
+                ChiSoDienNuoc cs = chiSoOpt.get();
+                tongDien = tongDien.add(BigDecimal.valueOf(cs.getDienTieuThu()));
+                tongNuoc = tongNuoc.add(BigDecimal.valueOf(cs.getNuocTieuThu()));
+            }
+
+            // Hoa don
+            List<HoaDon> hoaDons = hoaDonRepository.findByKhachThueAndKyThanhToan(khachThueId, ky);
+            if (!hoaDons.isEmpty()) {
+                HoaDon hd = hoaDons.get(0);
+                tongDaThanhToan = tongDaThanhToan.add(hd.getDaThanhToan());
+                tongTienDien = tongTienDien.add(hd.getTienDien() != null ? hd.getTienDien() : BigDecimal.ZERO);
+                tongTienNuoc = tongTienNuoc.add(hd.getTienNuoc() != null ? hd.getTienNuoc() : BigDecimal.ZERO);
+                BigDecimal conNo = hd.getConNo();
+                if (conNo.compareTo(BigDecimal.ZERO) > 0) {
+                    tongConNo = tongConNo.add(conNo);
+                    boolean quaHan = hd.getHanThanhToan() != null
+                            && hd.getHanThanhToan().isBefore(LocalDate.now());
+                    if (quaHan) soHoaDonQuaHan++;
+                    else soHoaDonChuaTT++;
+                } else {
+                    soHoaDonDaTT++;
+                }
+            }
+        }
+
+        result.put("tongDaThanhToan", tongDaThanhToan);
+        result.put("tongConNo", tongConNo);
+        result.put("tongDien", tongDien);
+        result.put("tongNuoc", tongNuoc);
+        result.put("tongTienDien", tongTienDien);
+        result.put("tongTienNuoc", tongTienNuoc);
+        result.put("soHoaDonDaTT", soHoaDonDaTT);
+        result.put("soHoaDonChuaTT", soHoaDonChuaTT);
+        result.put("soHoaDonQuaHan", soHoaDonQuaHan);
+
+        return result;
+    }
+
+    /**
+     * Lay chi tiet theo nam (cho bieu do + bang chi tiet)
+     * Tra ve danh sach 12 thang, moi thang gom chi so dien nuoc va hoa don
+     */
+    public Map<String, Object> getChiTietTheoNam(Long khachThueId, Long phongId, int nam) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> chiTiet = new ArrayList<>();
+
+        BigDecimal donGiaDien = getDonGiaDichVu("Điện");
+        BigDecimal donGiaNuoc = getDonGiaDichVu("Nước");
+        List<BigDecimal> doanhThuData = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+
+        for (int month = 1; month <= 12; month++) {
+            String ky = String.format("%d-%02d", nam, month);
+            labels.add("Tháng " + month);
+
+            Map<String, Object> thang = new HashMap<>();
+            thang.put("thang", month);
+            thang.put("ky", ky);
+            thang.put("nam", nam);
+
+            // Chi so dien nuoc
+            Optional<ChiSoDienNuoc> chiSoOpt = chiSoDienNuocRepository.findByPhongTro_PhongIdAndKyGhi(phongId, ky);
+            if (chiSoOpt.isPresent()) {
+                ChiSoDienNuoc cs = chiSoOpt.get();
+                thang.put("dienCu", cs.getDienCu());
+                thang.put("dienMoi", cs.getDienMoi());
+                thang.put("dienTieuThu", cs.getDienTieuThu());
+                thang.put("nuocCu", cs.getNuocCu());
+                thang.put("nuocMoi", cs.getNuocMoi());
+                thang.put("nuocTieuThu", cs.getNuocTieuThu());
+            } else {
+                thang.put("dienCu", 0);
+                thang.put("dienMoi", 0);
+                thang.put("dienTieuThu", 0);
+                thang.put("nuocCu", 0);
+                thang.put("nuocMoi", 0);
+                thang.put("nuocTieuThu", 0);
+            }
+
+            // Tien dien / nuoc theo chi so
+            int dienTieuThu = ((Number) thang.getOrDefault("dienTieuThu", 0)).intValue();
+            int nuocTieuThu = ((Number) thang.getOrDefault("nuocTieuThu", 0)).intValue();
+            thang.put("tienDien", donGiaDien.multiply(BigDecimal.valueOf(dienTieuThu)));
+            thang.put("tienNuoc", donGiaNuoc.multiply(BigDecimal.valueOf(nuocTieuThu)));
+            thang.put("donGiaDien", donGiaDien);
+            thang.put("donGiaNuoc", donGiaNuoc);
+
+            // Hoa don
+            List<HoaDon> hoaDons = hoaDonRepository.findByKhachThueAndKyThanhToan(khachThueId, ky);
+            if (!hoaDons.isEmpty()) {
+                HoaDon hd = hoaDons.get(0);
+                thang.put("hoaDonId", hd.getHoaDonId());
+                thang.put("tienPhong", hd.getTienPhong());
+                thang.put("phiDichVu", hd.getPhiDichVu() != null ? hd.getPhiDichVu() : BigDecimal.ZERO);
+                thang.put("tongTien", hd.getTongTien());
+                thang.put("trangThai", hd.getTrangThai().name());
+                thang.put("hanThanhToan", hd.getHanThanhToan());
+                doanhThuData.add(hd.getTongTien());
+            } else {
+                thang.put("hoaDonId", null);
+                thang.put("tienPhong", BigDecimal.ZERO);
+                thang.put("phiDichVu", BigDecimal.ZERO);
+                thang.put("tongTien", BigDecimal.ZERO);
+                thang.put("trangThai", "KHONG_CO");
+                thang.put("hanThanhToan", null);
+                doanhThuData.add(BigDecimal.ZERO);
+            }
+
+            chiTiet.add(thang);
+        }
+
+        result.put("labels", labels);
+        result.put("doanhThuData", doanhThuData);
+        result.put("chiTiet", chiTiet);
+
+        return result;
+    }
 }
